@@ -1,29 +1,51 @@
-name: Deploy to Azure
+name: Build and deploy WAR app to Azure Web App - telegram-tracker-service
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
 
-      - name: Set up Java
-        uses: actions/setup-java@v3
+      - name: Set up Java version
+        uses: actions/setup-java@v1
         with:
           java-version: '17'
-          distribution: 'adopt'
 
       - name: Build with Maven
-        run: mvn -B package --file pom.xml
+        run: mvn clean install
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v2
+        with:
+          name: java-app
+          path: '${{ github.workspace }}/target/*.war'
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: 'production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v2
+        with:
+          name: java-app
 
       - name: Deploy to Azure Web App
+        id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
         with:
-          app-name: telegram-tracker-service
-          slot-name: production
+          app-name: 'telegram-tracker-service'
+          slot-name: 'production'
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: '*.war'
+
