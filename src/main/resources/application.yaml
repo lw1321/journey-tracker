@@ -1,0 +1,5 @@
+spring:
+  firebase:
+    credentials: ${service_json}
+  telegram:
+    token: ${telegram_token}
