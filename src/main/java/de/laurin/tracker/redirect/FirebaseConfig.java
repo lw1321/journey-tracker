@@ -21,7 +21,6 @@ public class FirebaseConfig {
     private String credentials;
     @Bean
     FirebaseApp createFireBaseApp() throws IOException {
-        Log.info(credentials);
         ByteArrayInputStream serviceAccount = new ByteArrayInputStream(credentials.getBytes(StandardCharsets.UTF_8));
         FirebaseOptions options = null;
         try {
@@ -39,4 +38,5 @@ public class FirebaseConfig {
 
 
     }
+
 }
