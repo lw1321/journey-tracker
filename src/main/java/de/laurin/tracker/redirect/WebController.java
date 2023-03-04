@@ -16,6 +16,7 @@ import okhttp3.Response;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,8 +27,6 @@ import java.net.URL;
 import java.util.UUID;
 
 @RestController
-@Configuration
-@ConfigurationProperties(prefix = "telegram")
 @RequestMapping(path = "/v1") // This means URL's start with /v1 (after Application path)
 public class WebController {
 
@@ -36,6 +35,11 @@ public class WebController {
     @Value("${spring.telegram.token}")
     private String telegramToken;
 
+
+    @GetMapping(path = "/test")
+    public @ResponseBody ResponseEntity test (){
+        return ResponseEntity.status(HttpStatusCode.valueOf(200)).build();
+    }
 
     @PostMapping(path = "/telegram-webhook")
     public @ResponseBody ResponseEntity receiveTelegramWebhook(@RequestBody TelegramWebhook telegramWebhook) {
