@@ -3,6 +3,7 @@ package de.laurin.tracker.redirect;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
+import org.mortbay.log.Log;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -20,6 +21,7 @@ public class FirebaseConfig {
     private String credentials;
     @Bean
     FirebaseApp createFireBaseApp() throws IOException {
+        Log.info(credentials);
         ByteArrayInputStream serviceAccount = new ByteArrayInputStream(credentials.getBytes(StandardCharsets.UTF_8));
         FirebaseOptions options = null;
         try {
