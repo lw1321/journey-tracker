@@ -1,15 +1,13 @@
-package de.laurin.tracker.redirect;
+package tg.service.maven;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ProcessorApplication {
-
-
+public class TrackerApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(ProcessorApplication.class, args
+        SpringApplication.run(TrackerApplication.class, args
         );
     }
 

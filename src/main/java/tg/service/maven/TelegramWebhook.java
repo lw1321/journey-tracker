@@ -1,4 +1,4 @@
-package de.laurin.tracker.redirect;
+package tg.service.maven;
 
 public class TelegramWebhook{
     public int update_id;

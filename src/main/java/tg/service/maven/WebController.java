@@ -1,4 +1,4 @@
-package de.laurin.tracker.redirect;
+package tg.service.maven;
 
 import com.drew.imaging.ImageMetadataReader;
 import com.drew.imaging.ImageProcessingException;
@@ -14,9 +14,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,12 +32,6 @@ public class WebController {
 
     @Value("${spring.telegram.token}")
     private String telegramToken;
-
-
-    @GetMapping(path = "/test")
-    public @ResponseBody ResponseEntity test (){
-        return ResponseEntity.status(HttpStatusCode.valueOf(200)).build();
-    }
 
     @PostMapping(path = "/telegram-webhook")
     public @ResponseBody ResponseEntity receiveTelegramWebhook(@RequestBody TelegramWebhook telegramWebhook) {
