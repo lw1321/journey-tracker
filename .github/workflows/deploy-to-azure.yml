@@ -28,18 +28,12 @@ jobs:
 
       - name: Build with Maven
         run: mvn -B -DskipTests=true package --file pom.xml
-
-      - name: Deploy to VM via SSH
-        uses: appleboy/ssh-action@master
+      - name: Upload application
+        uses: appleboy/scp-action@master
         with:
           host: 20.187.74.158
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
-          script: |
-            cd ~
-            scp target/maven-0.0.1.jar+ azureuser@20.187.74.158:~
-            # Kill any running instance of the application
-            sudo kill -9 $(sudo lsof -t -i:80) || true
-            # Start the newly deployed instance
-            sudo nohup java -jar maven-0.0.1.jar+ &> /dev/null &
+          source: "maven.0.0.1.jar"
+          target: "~/source"
