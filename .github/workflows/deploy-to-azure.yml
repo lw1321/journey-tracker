@@ -38,3 +38,14 @@ jobs:
           port: 22
           source: "target/maven-0.0.1.jar"
           target: "~/source"
+
+      - name: Start Service
+        uses: appleboy/ssh-action@master
+        with:
+          host: 20.187.74.158
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            sudo kill -9 $(sudo lsof -t -i:80) || true
+            sudo nohup java -jar source/target/maven-0.0.1.jar+ &> /dev/null &
