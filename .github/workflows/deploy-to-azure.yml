@@ -30,7 +30,7 @@ jobs:
           port: 22
           script: |
             cd ~
-            scp target/maven-0.0.1.jar+ user@20.187.74.158:~
+            scp target/maven-0.0.1.jar+ azureuser@20.187.74.158:~
             # Kill any running instance of the application
             sudo kill -9 $(sudo lsof -t -i:80) || true
             # Start the newly deployed instance
