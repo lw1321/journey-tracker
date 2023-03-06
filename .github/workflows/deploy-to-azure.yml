@@ -36,5 +36,5 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
-          source: "maven-0.0.1.jar"
+          source: "target/maven-0.0.1.jar"
           target: "~/source"
