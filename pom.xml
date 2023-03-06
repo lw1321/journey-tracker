@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>tg.service</groupId>
 	<artifactId>maven</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<name>tracker</name>
 	<description>process &amp; store telegram webhook data </description>
 	<properties>
