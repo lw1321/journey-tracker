@@ -22,8 +22,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping(path = "/v1") // This means URL's start with /v1 (after Application path)
@@ -60,10 +59,21 @@ public class WebController {
             //parse
             okhttp3.ResponseBody responseBody = parseFit(downloadFile(file_id));
             Gson gson = new Gson();
+            List<double[]> coordinates = new ArrayList<>();
             try {
-                FitSequence[] fitSequence = gson.fromJson(responseBody.string(), FitSequence[].class);
-                FirebaseDatabase.getInstance().getReference().child("wahoo").child(Arrays.stream(fitSequence).findFirst().get().timestamp).setValueAsync(Arrays.asList(fitSequence));
-            } catch (IOException e) {
+                FitSequence[] fitSequences = gson.fromJson(responseBody.string(), FitSequence[].class);
+                double factor = (180 / Math.pow(2, 31));
+                for (FitSequence fitSequence : fitSequences) {
+                    double latitude = fitSequence.position_lat * factor;
+                    double longitude = fitSequence.position_long * factor;
+                    coordinates.add(new double[]{latitude, longitude});
+
+
+                    FirebaseDatabase.getInstance().getReference().child("wahoo").child(Arrays.stream(fitSequences).findFirst().get().timestamp).setValueAsync(coordinates);
+
+                }
+
+                } catch (IOException e) {
                 throw new RuntimeException(e);
             }
 
