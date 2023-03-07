@@ -2,7 +2,10 @@ package tg.service.maven;
 
 import com.drew.imaging.ImageMetadataReader;
 import com.drew.imaging.ImageProcessingException;
+import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
+import com.drew.metadata.Tag;
+import com.drew.metadata.exif.ExifDirectoryBase;
 import com.drew.metadata.exif.GpsDirectory;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Bucket;
@@ -70,7 +73,13 @@ public class WebController {
 
                 double latitude = gpsDirectory.getGeoLocation().getLatitude();
                 double longitude = gpsDirectory.getGeoLocation().getLongitude();
-                long timestampSec = gpsDirectory.getGpsDate().getTime() / 1000;
+                long timestampSec;
+                if(gpsDirectory.getGpsDate() != null){
+                    timestampSec = gpsDirectory.getGpsDate().getTime() / 1000;
+                }else{
+                    timestampSec = metadata.getFirstDirectoryOfType(ExifDirectoryBase.class).getDate(306).getTime();
+                }
+
 
                 telegramWebhook.message.location = new Location();
                 telegramWebhook.message.location.latitude = latitude;
