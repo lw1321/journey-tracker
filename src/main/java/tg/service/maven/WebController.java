@@ -4,6 +4,7 @@ import com.drew.imaging.ImageMetadataReader;
 import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.exif.GpsDirectory;
+import com.google.api.core.ApiFuture;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Bucket;
 import com.google.firebase.cloud.StorageClient;
@@ -66,26 +67,33 @@ public class WebController {
             try {
                 URL url = new URL("https://api.telegram.org/file/bot" + telegramToken + "/" + file_path);
                 inputStream = new BufferedInputStream(url.openStream());
-                UUID uuid = UUID.randomUUID();
-                Blob returnedImage = bucket.create(uuid + ".jpg", inputStream, "image/jpeg");
 
-                Metadata metadata = ImageMetadataReader.readMetadata(new BufferedInputStream(url.openStream()));
-                GpsDirectory gpsDirectory = metadata.getFirstDirectoryOfType(GpsDirectory.class);
+                var fileName = file_path.split("/")[1];
+                var type = fileName.split("\\.")[1];
+                if (type.equals("fit")) {
+                    // file from wahoo /element app
+                    bucket.create(fileName, inputStream);
+                } else {
+                    //image
+                    Blob returnedImage = bucket.create(fileName, inputStream, "image/jpeg");
 
-                double latitude = gpsDirectory.getGeoLocation().getLatitude();
-                double longitude = gpsDirectory.getGeoLocation().getLongitude();
-                long timestampSec = gpsDirectory.getGpsDate().getTime() / 1000;
+                    Metadata metadata = ImageMetadataReader.readMetadata(new BufferedInputStream(url.openStream()));
+                    GpsDirectory gpsDirectory = metadata.getFirstDirectoryOfType(GpsDirectory.class);
 
-                telegramWebhook.message.location = new Location();
-                telegramWebhook.message.location.latitude = latitude;
-                telegramWebhook.message.location.longitude = longitude;
-                telegramWebhook.message.location.created_date = (int) timestampSec;
-                telegramWebhook.message.document.blob_id = returnedImage.getBlobId().getName();
+                    double latitude = gpsDirectory.getGeoLocation().getLatitude();
+                    double longitude = gpsDirectory.getGeoLocation().getLongitude();
+                    long timestampSec = gpsDirectory.getGpsDate().getTime() / 1000;
 
+                    telegramWebhook.message.location = new Location();
+                    telegramWebhook.message.location.latitude = latitude;
+                    telegramWebhook.message.location.longitude = longitude;
+                    telegramWebhook.message.location.created_date = (int) timestampSec;
+                    telegramWebhook.message.document.blob_id = returnedImage.getBlobId().getName();
+                }
                 final FirebaseDatabase database = FirebaseDatabase.getInstance();
                 database.getReference().child(UUID.randomUUID().toString()).setValueAsync(telegramWebhook);
 
-                return ResponseEntity.ok(returnedImage.getMediaLink());
+                return ResponseEntity.ok().build();
 
             } catch (IOException e) {
                 throw new RuntimeException(e.getMessage());
