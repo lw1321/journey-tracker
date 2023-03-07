@@ -63,16 +63,24 @@ public class WebController {
             try {
                 FitSequence[] fitSequences = gson.fromJson(responseBody.string(), FitSequence[].class);
                 double factor = (180 / Math.pow(2, 31));
-                for (FitSequence fitSequence : fitSequences) {
-                    double latitude = fitSequence.position_lat * factor;
-                    double longitude = fitSequence.position_long * factor;
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.append("[ ");
+                for (int i = 0; i < fitSequences.length; i++) {
+                    double latitude = fitSequences[i].position_lat * factor;
+                    double longitude = fitSequences[i].position_long * factor;
                     coordinates.add(new double[]{latitude, longitude});
-
-                    FirebaseDatabase.getInstance().getReference().child("wahoo").child(Arrays.stream(fitSequences).findFirst().get().timestamp).setValueAsync(Arrays.asList(coordinates));
-
+                    if (longitude != 0.0) {
+                        stringBuilder.append("[" + longitude + "," + latitude + "]");
+                        if (i < fitSequences.length - 1) {
+                            stringBuilder.append(",");
+                        }
+                    }
                 }
+                stringBuilder.append("]");
+                FirebaseDatabase.getInstance().getReference().child("wahoo").child(Arrays.stream(fitSequences).findFirst().get().timestamp).setValueAsync(stringBuilder.toString());
 
-                } catch (IOException e) {
+
+            } catch (IOException e) {
                 throw new RuntimeException(e);
             }
 
@@ -92,9 +100,9 @@ public class WebController {
                 double latitude = gpsDirectory.getGeoLocation().getLatitude();
                 double longitude = gpsDirectory.getGeoLocation().getLongitude();
                 long timestampSec;
-                if(gpsDirectory.getGpsDate() != null){
+                if (gpsDirectory.getGpsDate() != null) {
                     timestampSec = gpsDirectory.getGpsDate().getTime() / 1000;
-                }else{
+                } else {
                     timestampSec = metadata.getFirstDirectoryOfType(ExifDirectoryBase.class).getDate(306).getTime();
                 }
 
@@ -109,7 +117,7 @@ public class WebController {
 
             Blob returnedImage = bucket.create(file_name, downloadFile(telegramWebhook.message.document.file_id), "image/jpeg");
 
-        telegramWebhook.message.document.blob_id = returnedImage.getBlobId().getName();
+            telegramWebhook.message.document.blob_id = returnedImage.getBlobId().getName();
         }
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
         database.getReference().child("documents").child(UUID.randomUUID().toString()).setValueAsync(telegramWebhook);
