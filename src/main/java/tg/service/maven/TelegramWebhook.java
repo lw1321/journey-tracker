@@ -48,5 +48,6 @@ class Thumb{
     public int file_size;
     public int width;
     public int height;
+    public String blob_id;
 }
 

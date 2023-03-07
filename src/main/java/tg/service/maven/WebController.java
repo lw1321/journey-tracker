@@ -4,7 +4,6 @@ import com.drew.imaging.ImageMetadataReader;
 import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.exif.GpsDirectory;
-import com.google.api.core.ApiFuture;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Bucket;
 import com.google.firebase.cloud.StorageClient;
@@ -15,13 +14,13 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
 
@@ -48,61 +47,72 @@ public class WebController {
         }
     }
 
-    private ResponseEntity processDocument(TelegramWebhook telegramWebhook) {
+    private ResponseEntity<TelegramWebhook> processDocument(TelegramWebhook telegramWebhook) {
+        String file_id = telegramWebhook.message.document.file_id;
+        String file_name = telegramWebhook.message.document.file_name;
+        String type = telegramWebhook.message.document.file_name.split("\\.")[1];
+        Bucket bucket = StorageClient.getInstance().bucket();
+        if (type.equals("fit")) {
+            // file from wahoo /element app
+            Blob blob = bucket.create(file_name, downloadFile(file_id));
+            telegramWebhook.message.document.blob_id = blob.getBlobId().getName();
+        } else {
+            //thumb
+            Blob thumbImageBlob = bucket.create("THUMB_" + file_name, downloadFile(telegramWebhook.message.document.thumb.file_id), "image/jpeg");
+
+            telegramWebhook.message.document.thumb.blob_id = thumbImageBlob.getBlobId().getName();
+            //image
+            BufferedInputStream originalImage = downloadFile(telegramWebhook.message.document.file_id);
+
+            try {
+                Metadata metadata = ImageMetadataReader.readMetadata(originalImage);
+                GpsDirectory gpsDirectory = metadata.getFirstDirectoryOfType(GpsDirectory.class);
+
+                double latitude = gpsDirectory.getGeoLocation().getLatitude();
+                double longitude = gpsDirectory.getGeoLocation().getLongitude();
+                long timestampSec = gpsDirectory.getGpsDate().getTime() / 1000;
+
+                telegramWebhook.message.location = new Location();
+                telegramWebhook.message.location.latitude = latitude;
+                telegramWebhook.message.location.longitude = longitude;
+                telegramWebhook.message.location.created_date = (int) timestampSec;
+            } catch (ImageProcessingException | IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            Blob returnedImage = bucket.create(file_name, originalImage, "image/jpeg");
+
+        telegramWebhook.message.document.blob_id = returnedImage.getBlobId().getName();
+        }
+        final FirebaseDatabase database = FirebaseDatabase.getInstance();
+        database.getReference().child(UUID.randomUUID().toString()).setValueAsync(telegramWebhook);
+
+        return ResponseEntity.ok(telegramWebhook);
+
+    }
+
+    private BufferedInputStream downloadFile(String file_id) {
         OkHttpClient client = new OkHttpClient();
         Request request = new Request.Builder()
-                .url(telegramBaseUrl + telegramToken + "/getFile?file_id=" + telegramWebhook.message.document.file_id)
+                .url(telegramBaseUrl + telegramToken + "/getFile?file_id=" + file_id)
                 .build();
-
         Call call = client.newCall(request);
         Response response = null;
+
         try {
             response = call.execute();
             String body = response.body().string();
-
             String file_path = JsonParser.parseString(body).getAsJsonObject().get("result").getAsJsonObject().get("file_path").getAsString();
 
-            Bucket bucket = StorageClient.getInstance().bucket();
-            InputStream inputStream;
-            try {
-                URL url = new URL("https://api.telegram.org/file/bot" + telegramToken + "/" + file_path);
-                inputStream = new BufferedInputStream(url.openStream());
+            URL url = new URL("https://api.telegram.org/file/bot" + telegramToken + "/" + file_path);
+            return new BufferedInputStream(url.openStream());
 
-                var fileName = file_path.split("/")[1];
-                var type = fileName.split("\\.")[1];
-                if (type.equals("fit")) {
-                    // file from wahoo /element app
-                    bucket.create(fileName, inputStream);
-                } else {
-                    //image
-                    Blob returnedImage = bucket.create(fileName, inputStream, "image/jpeg");
-
-                    Metadata metadata = ImageMetadataReader.readMetadata(new BufferedInputStream(url.openStream()));
-                    GpsDirectory gpsDirectory = metadata.getFirstDirectoryOfType(GpsDirectory.class);
-
-                    double latitude = gpsDirectory.getGeoLocation().getLatitude();
-                    double longitude = gpsDirectory.getGeoLocation().getLongitude();
-                    long timestampSec = gpsDirectory.getGpsDate().getTime() / 1000;
-
-                    telegramWebhook.message.location = new Location();
-                    telegramWebhook.message.location.latitude = latitude;
-                    telegramWebhook.message.location.longitude = longitude;
-                    telegramWebhook.message.location.created_date = (int) timestampSec;
-                    telegramWebhook.message.document.blob_id = returnedImage.getBlobId().getName();
-                }
-                final FirebaseDatabase database = FirebaseDatabase.getInstance();
-                database.getReference().child(UUID.randomUUID().toString()).setValueAsync(telegramWebhook);
-
-                return ResponseEntity.ok().build();
-
-            } catch (IOException e) {
-                throw new RuntimeException(e.getMessage());
-            } catch (ImageProcessingException e) {
-                throw new RuntimeException(e);
-            }
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
         } catch (IOException e) {
-            //TODO
             throw new RuntimeException(e);
         }
+
     }
 }
+
