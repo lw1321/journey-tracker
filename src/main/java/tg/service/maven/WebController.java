@@ -80,7 +80,7 @@ public class WebController {
                 throw new RuntimeException(e);
             }
 
-            Blob returnedImage = bucket.create(file_name, originalImage, "image/jpeg");
+            Blob returnedImage = bucket.create(file_name, downloadFile(telegramWebhook.message.document.file_id), "image/jpeg");
 
         telegramWebhook.message.document.blob_id = returnedImage.getBlobId().getName();
         }
