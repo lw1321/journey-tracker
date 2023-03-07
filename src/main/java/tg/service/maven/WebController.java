@@ -2,29 +2,27 @@ package tg.service.maven;
 
 import com.drew.imaging.ImageMetadataReader;
 import com.drew.imaging.ImageProcessingException;
-import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
-import com.drew.metadata.Tag;
 import com.drew.metadata.exif.ExifDirectoryBase;
 import com.drew.metadata.exif.GpsDirectory;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Bucket;
 import com.google.firebase.cloud.StorageClient;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.gson.Gson;
 import com.google.gson.JsonParser;
-import okhttp3.Call;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import okhttp3.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.UUID;
 
 @RestController
@@ -59,6 +57,17 @@ public class WebController {
             // file from wahoo /element app
             Blob blob = bucket.create(file_name, downloadFile(file_id));
             telegramWebhook.message.document.blob_id = blob.getBlobId().getName();
+            //parse
+            okhttp3.ResponseBody responseBody = parseFit(downloadFile(file_id));
+            Gson gson = new Gson();
+            try {
+                FitSequence[] fitSequence = gson.fromJson(responseBody.string(), FitSequence[].class);
+                FirebaseDatabase.getInstance().getReference().child("wahoo").child(Arrays.stream(fitSequence).findFirst().get().timestamp).setValueAsync(Arrays.asList(fitSequence));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+
         } else {
             //thumb
             Blob thumbImageBlob = bucket.create("THUMB_" + file_name, downloadFile(telegramWebhook.message.document.thumb.file_id), "image/jpeg");
@@ -97,6 +106,26 @@ public class WebController {
         database.getReference().child(UUID.randomUUID().toString()).setValueAsync(telegramWebhook);
 
         return ResponseEntity.ok(telegramWebhook);
+
+    }
+
+    private okhttp3.ResponseBody parseFit(BufferedInputStream bufferedInputStream) {
+        OkHttpClient client = new OkHttpClient().newBuilder()
+                .build();
+        MediaType mediaType = MediaType.parse("application/octet-stream");
+
+        try {
+            okhttp3.RequestBody requestBody = okhttp3.RequestBody.create(bufferedInputStream.readAllBytes());
+            Request request = new Request.Builder()
+                    .url("http://127.0.0.1:5000/parse")
+                    .method("POST", requestBody)
+                    .addHeader("Content-Type", "application/octet-stream")
+                    .build();
+            Response response = client.newCall(request).execute();
+            return response.body();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
     }
 
