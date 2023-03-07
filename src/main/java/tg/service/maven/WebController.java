@@ -68,8 +68,7 @@ public class WebController {
                     double longitude = fitSequence.position_long * factor;
                     coordinates.add(new double[]{latitude, longitude});
 
-
-                    FirebaseDatabase.getInstance().getReference().child("wahoo").child(Arrays.stream(fitSequences).findFirst().get().timestamp).setValueAsync(coordinates);
+                    FirebaseDatabase.getInstance().getReference().child("wahoo").child(Arrays.stream(fitSequences).findFirst().get().timestamp).setValueAsync(Arrays.asList(coordinates));
 
                 }
 
