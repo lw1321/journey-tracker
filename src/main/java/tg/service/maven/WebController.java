@@ -103,7 +103,7 @@ public class WebController {
                 if (gpsDirectory.getGpsDate() != null) {
                     timestampSec = gpsDirectory.getGpsDate().getTime() / 1000;
                 } else {
-                    timestampSec = metadata.getFirstDirectoryOfType(ExifDirectoryBase.class).getDate(306).getTime();
+                    timestampSec = metadata.getFirstDirectoryOfType(ExifDirectoryBase.class).getDate(306).getTime() / 1000;
                 }
 
 
