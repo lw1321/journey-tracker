@@ -103,7 +103,7 @@ public class WebController {
         telegramWebhook.message.document.blob_id = returnedImage.getBlobId().getName();
         }
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
-        database.getReference().child(UUID.randomUUID().toString()).setValueAsync(telegramWebhook);
+        database.getReference().child("documents").child(UUID.randomUUID().toString()).setValueAsync(telegramWebhook);
 
         return ResponseEntity.ok(telegramWebhook);
 
