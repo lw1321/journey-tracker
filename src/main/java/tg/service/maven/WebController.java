@@ -70,7 +70,7 @@ public class WebController {
                     double longitude = fitSequences[i].position_long * factor;
                     coordinates.add(new double[]{latitude, longitude});
                     if (longitude != 0.0) {
-                        stringBuilder.append("[" + longitude + "," + latitude + "]");
+                        stringBuilder.append("[" + latitude + "," + longitude + "]");
                         if (i < fitSequences.length - 1) {
                             stringBuilder.append(",");
                         }
