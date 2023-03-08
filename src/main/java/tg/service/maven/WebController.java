@@ -76,7 +76,7 @@ public class WebController {
     }
 
 
-    @GetMapping("/image-locations")
+    @GetMapping("/location-images")
     public ResponseEntity<List<LocationImage>> getImageLocations() {
         Firestore db = FirestoreClient.getFirestore();
         var response = new ArrayList<LocationImage>();
