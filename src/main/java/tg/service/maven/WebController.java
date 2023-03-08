@@ -42,7 +42,7 @@ public class WebController {
             return processDocument(telegramWebhook);
         } else {
             final FirebaseDatabase database = FirebaseDatabase.getInstance();
-            database.getReference().child(UUID.randomUUID().toString()).setValueAsync(telegramWebhook);
+            database.getReference().child("locations").child(UUID.randomUUID().toString()).setValueAsync(telegramWebhook);
             return ResponseEntity.ok().build();
         }
     }
