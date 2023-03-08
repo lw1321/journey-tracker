@@ -5,3 +5,8 @@ spring:
     credentials: ${service_json}
   telegram:
     token: ${telegram_token}
+azure:
+  storage:
+    account-name: imagesandwahoo
+    container-name: telegram
+    connection-string: ${connection_string}
