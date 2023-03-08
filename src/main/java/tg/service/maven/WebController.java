@@ -58,21 +58,68 @@ public class WebController {
         ApiFuture<QuerySnapshot> future = db.collection("wahoo").get();
 
 // Wait for the query to execute and retrieve the documents
+        var response = new ArrayList<RouteGeojson>();
         try {
             QuerySnapshot querySnapshot = future.get();
             for (DocumentSnapshot document : querySnapshot.getDocuments()) {
                 RouteGeojson routeGeojson = new RouteGeojson();
-                //routeGeojson.route = document.getData().get(0).wait();
-                System.out.println(document.getId() + " => " + document.getData());
+                routeGeojson.timeStamp = document.getData().get("timeStamp").toString();
+                routeGeojson.route = document.getData().get("route").toString();
+                response.add(routeGeojson);
             }
-            return null;
+            return ResponseEntity.ok(response);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         }
+    }
 
 
+    @GetMapping("/image-locations")
+    public ResponseEntity<List<LocationImage>> getImageLocations() {
+        Firestore db = FirestoreClient.getFirestore();
+        var response = new ArrayList<LocationImage>();
+        ApiFuture<QuerySnapshot> future = db.collection("location_images").get();
+        try {
+            QuerySnapshot querySnapshot = future.get();
+            for (DocumentSnapshot document : querySnapshot.getDocuments()) {
+                LocationImage locationImage = new LocationImage();
+                locationImage.thumbUrl = document.getString("thumbUrl");
+                locationImage.imageUrl = document.getString("imageUrl");
+                locationImage.createdDate = (long) document.get("createdDate");
+                locationImage.latitude = (double) document.get("latitude");
+                locationImage.longitude = (double) document.get("longitude");
+                response.add(locationImage);
+            }
+            return ResponseEntity.ok(response);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    @GetMapping("/locations")
+    public ResponseEntity<List<Location>> getLocations() {
+        Firestore db = FirestoreClient.getFirestore();
+        var response = new ArrayList<Location>();
+        ApiFuture<QuerySnapshot> future = db.collection("locations").get();
+        try {
+            QuerySnapshot querySnapshot = future.get();
+            for (DocumentSnapshot document : querySnapshot.getDocuments()) {
+                Location location = new Location();
+                location.createdDate = (long) document.get("createdDate");
+                location.latitude = (double) document.get("latitude");
+                location.longitude = (double) document.get("longitude");
+                location.messageId = (int) document.get("messageId");
+                response.add(location);
+            }
+            return ResponseEntity.ok(response);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @PostMapping(path = "/telegram-webhook")
@@ -80,16 +127,111 @@ public class WebController {
         if (telegramWebhook.message == null) {
             return ResponseEntity.notFound().build();
         }
+        //store raw webhook
+        saveOnFirebase("telegram-webook", telegramWebhook);
+
         if (telegramWebhook.message.document != null) {
             // data message (image or wahoo)
             return processDocument(telegramWebhook);
         } else {
             // location message
-            saveOnFirebase("locations", telegramWebhook);
+            Location location = new Location();
+            location.longitude = telegramWebhook.message.location.longitude;
+            location.latitude = telegramWebhook.message.location.latitude;
+            location.createdDate = telegramWebhook.message.date;
+            location.messageId = telegramWebhook.message.message_id;
+
+            saveOnFirebase("locations", location );
             return ResponseEntity.ok().build();
 
         }
     }
+
+    private ResponseEntity<TelegramWebhook> processDocument(TelegramWebhook telegramWebhook) {
+
+        String file_id = telegramWebhook.message.document.file_id;
+        String file_name = telegramWebhook.message.document.file_name;
+        String type = telegramWebhook.message.document.file_name.split("\\.")[1];
+        if (type.equals("fit")) {
+            WahooRecord wahooRecord = new WahooRecord();
+            // file from wahoo /element app
+
+            String fileUrl = uploadFile(file_name, downloadFile(file_id));
+            wahooRecord.blobUrl = fileUrl;
+            //parse
+            okhttp3.ResponseBody responseBody = parseFit(downloadFile(file_id));
+            Gson gson = new Gson();
+            List<double[]> coordinates = new ArrayList<>();
+            try {
+                FitSequence[] fitSequences = gson.fromJson(responseBody.string(), FitSequence[].class);
+                double factor = (180 / Math.pow(2, 31));
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.append("[ ");
+                for (int i = 0; i < fitSequences.length; i++) {
+                    double latitude = fitSequences[i].position_lat * factor;
+                    double longitude = fitSequences[i].position_long * factor;
+                    coordinates.add(new double[]{latitude, longitude});
+                    if (latitude != 0.0) {
+                        stringBuilder.append("[" + longitude + "," + latitude + "]");
+                        if (i < fitSequences.length - 1) {
+                            stringBuilder.append(",");
+                        }
+                    }
+                }
+                stringBuilder.append("]");
+                wahooRecord.route = stringBuilder.toString();
+                wahooRecord.timeStamp = Arrays.stream(fitSequences).findFirst().get().timestamp;
+
+                saveOnFirebase("wahoo", wahooRecord);
+                saveAllOnFirebase(new ArrayList<>(Arrays.asList(fitSequences)));
+
+
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+
+        } else {
+            LocationImage locationImage = new LocationImage();
+            //thumb
+            String thumbUrl = uploadFile("Thumb_" + telegramWebhook.message.document.file_name, downloadFile(telegramWebhook.message.document.thumb.file_id));
+
+
+            locationImage.thumbUrl = thumbUrl;
+            //image
+            BufferedInputStream originalImage = downloadFile(telegramWebhook.message.document.file_id);
+
+            try {
+                Metadata metadata = ImageMetadataReader.readMetadata(originalImage);
+                GpsDirectory gpsDirectory = metadata.getFirstDirectoryOfType(GpsDirectory.class);
+
+                double latitude = gpsDirectory.getGeoLocation().getLatitude();
+                double longitude = gpsDirectory.getGeoLocation().getLongitude();
+                long timestampSec;
+                if (gpsDirectory.getGpsDate() != null) {
+                    timestampSec = gpsDirectory.getGpsDate().getTime() / 1000;
+                } else {
+                    timestampSec = metadata.getFirstDirectoryOfType(ExifDirectoryBase.class).getDate(306).getTime() / 1000;
+                }
+
+
+                locationImage.latitude = latitude;
+                locationImage.longitude = longitude;
+                locationImage.createdDate = timestampSec;
+            } catch (ImageProcessingException | IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            String imageUrl = uploadFile(file_name, downloadFile(telegramWebhook.message.document.file_id));
+            locationImage.imageUrl = imageUrl;
+
+            saveOnFirebase("location_images", locationImage);
+        }
+
+        return ResponseEntity.ok(telegramWebhook);
+
+    }
+
 
     private void saveAllOnFirebase(ArrayList<FitSequence> fitSequences) {
         int batchSize = 500;
@@ -120,89 +262,6 @@ public class WebController {
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private ResponseEntity<TelegramWebhook> processDocument(TelegramWebhook telegramWebhook) {
-        String file_id = telegramWebhook.message.document.file_id;
-        String file_name = telegramWebhook.message.document.file_name;
-        String type = telegramWebhook.message.document.file_name.split("\\.")[1];
-        if (type.equals("fit")) {
-            // file from wahoo /element app
-
-            String file_url = uploadFile(file_name, downloadFile(file_id));
-            telegramWebhook.message.document.blob_url = file_url;
-            //parse
-            okhttp3.ResponseBody responseBody = parseFit(downloadFile(file_id));
-            Gson gson = new Gson();
-            List<double[]> coordinates = new ArrayList<>();
-            try {
-                FitSequence[] fitSequences = gson.fromJson(responseBody.string(), FitSequence[].class);
-                double factor = (180 / Math.pow(2, 31));
-                StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.append("[ ");
-                for (int i = 0; i < fitSequences.length; i++) {
-                    double latitude = fitSequences[i].position_lat * factor;
-                    double longitude = fitSequences[i].position_long * factor;
-                    coordinates.add(new double[]{latitude, longitude});
-                    if (latitude != 0.0) {
-                        stringBuilder.append("[" + longitude + "," + latitude + "]");
-                        if (i < fitSequences.length - 1) {
-                            stringBuilder.append(",");
-                        }
-                    }
-                }
-                stringBuilder.append("]");
-                WahooRecord wahooRecord = new WahooRecord();
-                wahooRecord.route = stringBuilder.toString();
-                wahooRecord.timeStamp = Arrays.stream(fitSequences).findFirst().get().timestamp;
-
-                saveOnFirebase("wahoo", wahooRecord);
-                saveAllOnFirebase(new ArrayList<>(Arrays.asList(fitSequences)));
-
-
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-
-        } else {
-            //thumb
-            String url = uploadFile("Thumb_" + telegramWebhook.message.document.file_name, downloadFile(telegramWebhook.message.document.thumb.file_id));
-
-            telegramWebhook.message.document.thumb.blob_url = url;
-            //image
-            BufferedInputStream originalImage = downloadFile(telegramWebhook.message.document.file_id);
-
-            try {
-                Metadata metadata = ImageMetadataReader.readMetadata(originalImage);
-                GpsDirectory gpsDirectory = metadata.getFirstDirectoryOfType(GpsDirectory.class);
-
-                double latitude = gpsDirectory.getGeoLocation().getLatitude();
-                double longitude = gpsDirectory.getGeoLocation().getLongitude();
-                long timestampSec;
-                if (gpsDirectory.getGpsDate() != null) {
-                    timestampSec = gpsDirectory.getGpsDate().getTime() / 1000;
-                } else {
-                    timestampSec = metadata.getFirstDirectoryOfType(ExifDirectoryBase.class).getDate(306).getTime() / 1000;
-                }
-
-
-                telegramWebhook.message.location = new Location();
-                telegramWebhook.message.location.latitude = latitude;
-                telegramWebhook.message.location.longitude = longitude;
-                telegramWebhook.message.location.created_date = (int) timestampSec;
-            } catch (ImageProcessingException | IOException e) {
-                throw new RuntimeException(e);
-            }
-
-            String image_url = uploadFile(file_name, downloadFile(telegramWebhook.message.document.file_id));
-
-            telegramWebhook.message.document.blob_url = image_url;
-        }
-        saveOnFirebase("documents", telegramWebhook);
-
-        return ResponseEntity.ok(telegramWebhook);
-
     }
 
     private okhttp3.ResponseBody parseFit(BufferedInputStream bufferedInputStream) {

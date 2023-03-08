@@ -40,7 +40,8 @@ class From{
 class Location{
     public double latitude;
     public double longitude;
-    public long created_date;
+    public long createdDate;
+    public int messageId;
 }
 class Thumb{
     public String file_id;
