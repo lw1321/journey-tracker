@@ -279,8 +279,8 @@ public class WebController {
 
             WahooRawRecord wahooRawRecord = new WahooRawRecord();
             wahooRawRecord.fitSequences = batch;
-
-            saveOnFirebase("wh_raw_" + fitSequences.stream().findFirst().get().timestamp, wahooRawRecord, documentId);
+            var documentName = String.format("%s_%d_%d", documentId, index, index + batchSize);
+            saveOnFirebase("wahoo_raw", wahooRawRecord, documentName);
 
             index += batchSize;
         }
