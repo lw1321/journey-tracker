@@ -115,7 +115,6 @@ public class WebController {
                 location.createdDate = (long) document.get("createdDate");
                 location.latitude = (double) document.get("latitude");
                 location.longitude = (double) document.get("longitude");
-                location.messageId = (int) document.get("messageId");
                 response.add(location);
             }
             return ResponseEntity.ok(response);
@@ -177,7 +176,6 @@ public class WebController {
             location.longitude = telegramWebhook.message.location.longitude;
             location.latitude = telegramWebhook.message.location.latitude;
             location.createdDate = telegramWebhook.message.date;
-            location.messageId = telegramWebhook.message.message_id;
 
             saveOnFirebase("locations", location, String.valueOf(telegramWebhook.message.message_id));
             return ResponseEntity.ok().build();

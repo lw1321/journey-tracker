@@ -46,7 +46,6 @@ class Location{
     public double latitude;
     public double longitude;
     public long createdDate;
-    public int messageId;
 }
 class Thumb{
     public String file_id;
