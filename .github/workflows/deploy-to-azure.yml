@@ -28,7 +28,6 @@ jobs:
           cache: maven
       - name: Copy .p12 file to resources directory
         run: |
-          mkdir -p src/main/resources/
           echo "${{ secrets.SSL_P12_STRING }}" | base64 --decode > src/main/resources/keystore.p12
       - name: Build with Maven
         run: mvn -B -DskipTests=true package --file pom.xml
