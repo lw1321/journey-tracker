@@ -97,8 +97,9 @@ fetch('https://tellmemore.dev/v1/location-images')
             icon: imageIcon
         }).addTo(map);
         var imageDate = new Date(imageLocation.createdDate * 1000);
+        var comment = imageLocation.comment;
         var formattedDate = imageDate.toLocaleDateString('de-DE'); //imageDate.toLocaleTimeString('de-DE'); // Format as string
-        var popupContent = '<div><img src="' + imageLocation.thumbUrl + '" width="' + imageWidth + '" height="' + imageHeight + '"></div><div>' + formattedDate + '</div>';
+        var popupContent = '<div><img src="' + imageLocation.thumbUrl + '" width="' + imageWidth + '" height="' + imageHeight + '"></div><div>' + formattedDate + "   " + comment'</div>';
 
         marker.bindPopup(popupContent).openPopup();
     }
