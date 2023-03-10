@@ -7,6 +7,6 @@ public class LocationImage {
     public String imageUrl;
     public double latitude;
     public double longitude;
+    public int comment;
 
-    public int messageId;
 }

@@ -92,7 +92,7 @@ public class WebController {
                 locationImage.createdDate = (long) document.get("createdDate");
                 locationImage.latitude = (double) document.get("latitude");
                 locationImage.longitude = (double) document.get("longitude");
-                locationImage.messageId = (int) document.get("messageId");
+                locationImage.comment = (int) document.get("comment");
                 response.add(locationImage);
             }
             return ResponseEntity.ok(response);
@@ -198,8 +198,33 @@ public class WebController {
             // get the document by message id and store the comment in a new field, then show the comment below the date
             String comment = telegramWebhook.message.text;
             int originalMessageId = telegramWebhook.message.reply_to_message.message_id;
+            try {
+                Firestore db = FirestoreClient.getFirestore();
+                DocumentReference docRef = db.collection("location_images").document(String.valueOf(originalMessageId));
+                // Retrieve the document
+                ApiFuture<DocumentSnapshot> future = docRef.get();
+                DocumentSnapshot document = future.get();
 
-            //
+                // Check if the document exists
+                if (document.exists()) {
+                    // Retrieve the data from the document
+                    Map<String, Object> data = document.getData();
+                    // Specify the updates to the document
+                    Map<String, Object> updates = new HashMap<>();
+                    updates.put("comment", comment);
+                    // Update the document
+                    ApiFuture<WriteResult> update = docRef.update(updates);
+                    System.out.println("Data: " + update.get().toString());
+                } else {
+                    System.out.println("Document not found!");
+                }
+                //
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+
         } else {
             LocationImage locationImage = new LocationImage();
             //thumb
@@ -232,7 +257,6 @@ public class WebController {
 
             String imageUrl = uploadFile(file_name, downloadFile(telegramWebhook.message.document.file_id));
             locationImage.imageUrl = imageUrl;
-            locationImage.messageId = telegramWebhook.message.message_id;
 
             saveOnFirebase("location_images", locationImage, String.valueOf(telegramWebhook.message.message_id));
         }
