@@ -92,7 +92,7 @@ public class WebController {
                 locationImage.createdDate = (long) document.get("createdDate");
                 locationImage.latitude = (double) document.get("latitude");
                 locationImage.longitude = (double) document.get("longitude");
-                locationImage.comment = (int) document.get("comment");
+                locationImage.comment = String.valueOf(document.get("comment"));
                 response.add(locationImage);
             }
             return ResponseEntity.ok(response);
