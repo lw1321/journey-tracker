@@ -30,21 +30,7 @@ fetch('https://tellmemore.dev/v1/locations')
         L.marker([location.latitude, location.longitude], {
             icon: bikeIcon
         }).addTo(map);
-        var array = JSON.parse(wahooRecord.route)
-        var route = [{
-            "type": "LineString",
-            "coordinates": array
-        }];
-        var myStyle = {
-            "color": "#DC143C",
-            "weight": 6,
-            "opacity": 0.75
-        };
-        L.geoJSON(route, {
-            style: myStyle
-        }).addTo(map);
     }
-
 })
 .catch(error => {
     console.error(error);
