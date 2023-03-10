@@ -135,7 +135,43 @@ public class WebController {
         if (telegramWebhook.message.document != null) {
             // data message (image or wahoo)
             return processDocument(telegramWebhook);
-        } else {
+        }
+        else if (telegramWebhook.message.reply_to_message != null) {
+            // ah its a reply message => comment
+            // get the document by message id and store the comment in a new field, then show the comment below the date
+            String comment = telegramWebhook.message.text;
+            int originalMessageId = telegramWebhook.message.reply_to_message.message_id;
+            try {
+                Firestore db = FirestoreClient.getFirestore();
+                DocumentReference docRef = db.collection("location_images").document(String.valueOf(originalMessageId));
+                // Retrieve the document
+                ApiFuture<DocumentSnapshot> future = docRef.get();
+                DocumentSnapshot document = future.get();
+
+                // Check if the document exists
+                if (document.exists()) {
+                    // Retrieve the data from the document
+                    Map<String, Object> data = document.getData();
+                    // Specify the updates to the document
+                    Map<String, Object> updates = new HashMap<>();
+                    updates.put("comment", comment);
+                    // Update the document
+                    ApiFuture<WriteResult> update = docRef.update(updates);
+                    System.out.println("Data: " + update.get().toString());
+                    return ResponseEntity.ok().build();
+                } else {
+                    System.out.println("Document not found!");
+                    return ResponseEntity.notFound().build();
+                }
+                //
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+        else {
             // location message
             Location location = new Location();
             location.longitude = telegramWebhook.message.location.longitude;
@@ -193,39 +229,8 @@ public class WebController {
             }
 
 
-        } else if (telegramWebhook.message.reply_to_message != null) {
-            // ah its a reply message => comment
-            // get the document by message id and store the comment in a new field, then show the comment below the date
-            String comment = telegramWebhook.message.text;
-            int originalMessageId = telegramWebhook.message.reply_to_message.message_id;
-            try {
-                Firestore db = FirestoreClient.getFirestore();
-                DocumentReference docRef = db.collection("location_images").document(String.valueOf(originalMessageId));
-                // Retrieve the document
-                ApiFuture<DocumentSnapshot> future = docRef.get();
-                DocumentSnapshot document = future.get();
-
-                // Check if the document exists
-                if (document.exists()) {
-                    // Retrieve the data from the document
-                    Map<String, Object> data = document.getData();
-                    // Specify the updates to the document
-                    Map<String, Object> updates = new HashMap<>();
-                    updates.put("comment", comment);
-                    // Update the document
-                    ApiFuture<WriteResult> update = docRef.update(updates);
-                    System.out.println("Data: " + update.get().toString());
-                } else {
-                    System.out.println("Document not found!");
-                }
-                //
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            } catch (ExecutionException e) {
-                throw new RuntimeException(e);
-            }
-
-        } else {
+        }
+        else {
             LocationImage locationImage = new LocationImage();
             //thumb
             String thumbUrl = uploadFile("Thumb_" + telegramWebhook.message.document.file_name, downloadFile(telegramWebhook.message.document.thumb.file_id));
