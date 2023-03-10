@@ -49,7 +49,10 @@ public class WebController {
 
     @Value("${spring.telegram.token}")
     private String telegramToken;
-
+    @GetMapping("/")
+    public String index() {
+        return "index.html";
+    }
     @GetMapping("/wahoo-geojson")
     public ResponseEntity<List<RouteGeojson>> getAllWahooDataAsGeojson() {
         Firestore db = FirestoreClient.getFirestore();
