@@ -12,10 +12,7 @@ import com.drew.metadata.Metadata;
 import com.drew.metadata.exif.ExifDirectoryBase;
 import com.drew.metadata.exif.GpsDirectory;
 import com.google.api.core.ApiFuture;
-import com.google.cloud.firestore.DocumentReference;
-import com.google.cloud.firestore.DocumentSnapshot;
-import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.QuerySnapshot;
+import com.google.cloud.firestore.*;
 import com.google.firebase.cloud.FirestoreClient;
 import com.google.gson.Gson;
 import com.google.gson.JsonParser;
@@ -95,6 +92,7 @@ public class WebController {
                 locationImage.createdDate = (long) document.get("createdDate");
                 locationImage.latitude = (double) document.get("latitude");
                 locationImage.longitude = (double) document.get("longitude");
+                locationImage.messageId = (int) document.get("messageId");
                 response.add(locationImage);
             }
             return ResponseEntity.ok(response);
@@ -104,6 +102,7 @@ public class WebController {
             throw new RuntimeException(e);
         }
     }
+
     @GetMapping("/locations")
     public ResponseEntity<List<Location>> getLocations() {
         Firestore db = FirestoreClient.getFirestore();
@@ -131,7 +130,7 @@ public class WebController {
             return ResponseEntity.notFound().build();
         }
         //store raw webhook
-        saveOnFirebase("telegram-webook", telegramWebhook);
+        saveOnFirebase("telegram_raw", telegramWebhook, String.valueOf(telegramWebhook.message.message_id));
 
         if (telegramWebhook.message.document != null) {
             // data message (image or wahoo)
@@ -144,7 +143,7 @@ public class WebController {
             location.createdDate = telegramWebhook.message.date;
             location.messageId = telegramWebhook.message.message_id;
 
-            saveOnFirebase("locations", location );
+            saveOnFirebase("locations", location, String.valueOf(telegramWebhook.message.message_id));
             return ResponseEntity.ok().build();
 
         }
@@ -185,8 +184,8 @@ public class WebController {
                 wahooRecord.route = stringBuilder.toString();
                 wahooRecord.timeStamp = Arrays.stream(fitSequences).findFirst().get().timestamp;
 
-                saveOnFirebase("wahoo", wahooRecord);
-                saveAllOnFirebase(new ArrayList<>(Arrays.asList(fitSequences)));
+                saveOnFirebase("wahoo", wahooRecord, String.valueOf(telegramWebhook.message.message_id));
+                saveAllOnFirebase(new ArrayList<>(Arrays.asList(fitSequences)), String.valueOf(telegramWebhook.message.message_id));
 
 
             } catch (IOException e) {
@@ -194,11 +193,17 @@ public class WebController {
             }
 
 
+        } else if (telegramWebhook.message.reply_to_message != null) {
+            // ah its a reply message => comment
+            // get the document by message id and store the comment in a new field, then show the comment below the date
+            String comment = telegramWebhook.message.text;
+            int originalMessageId = telegramWebhook.message.reply_to_message.message_id;
+
+            //
         } else {
             LocationImage locationImage = new LocationImage();
             //thumb
             String thumbUrl = uploadFile("Thumb_" + telegramWebhook.message.document.file_name, downloadFile(telegramWebhook.message.document.thumb.file_id));
-
 
             locationImage.thumbUrl = thumbUrl;
             //image
@@ -227,8 +232,9 @@ public class WebController {
 
             String imageUrl = uploadFile(file_name, downloadFile(telegramWebhook.message.document.file_id));
             locationImage.imageUrl = imageUrl;
+            locationImage.messageId = telegramWebhook.message.message_id;
 
-            saveOnFirebase("location_images", locationImage);
+            saveOnFirebase("location_images", locationImage, String.valueOf(telegramWebhook.message.message_id));
         }
 
         return ResponseEntity.ok(telegramWebhook);
@@ -236,7 +242,7 @@ public class WebController {
     }
 
 
-    private void saveAllOnFirebase(ArrayList<FitSequence> fitSequences) {
+    private void saveAllOnFirebase(ArrayList<FitSequence> fitSequences, String documentId) {
         int batchSize = 500;
         int index = 0;
 
@@ -247,21 +253,20 @@ public class WebController {
             WahooRawRecord wahooRawRecord = new WahooRawRecord();
             wahooRawRecord.fitSequences = batch;
 
-            saveOnFirebase("wh_raw_" + fitSequences.stream().findFirst().get().timestamp, wahooRawRecord);
+            saveOnFirebase("wh_raw_" + fitSequences.stream().findFirst().get().timestamp, wahooRawRecord, documentId);
 
             index += batchSize;
         }
     }
 
 
-    private void saveOnFirebase(String collectionName, Object data) {
+    private void saveOnFirebase(String collectionName, Object data, String documentId) {
         try {
             Firestore db = FirestoreClient.getFirestore();
 
-            ApiFuture<DocumentReference> future = db.collection(collectionName).add(data);
+            WriteResult future = db.collection(collectionName).document(documentId).set(data).get();
             // Wait for the document to be written to the database
-            DocumentReference documentReference = future.get();
-            System.out.println("Added document with ID: " + documentReference.getId());
+            System.out.println("Added document with ID: " + documentId);
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
