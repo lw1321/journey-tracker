@@ -104,10 +104,7 @@ fetch('https://tellmemore.dev/v1/location-images')
                     '<div><a href="https://www.google.de/maps/place/' + imageLocation.latitude + '+' + imageLocation.longitude + '/@' + imageLocation.latitude + '+' + imageLocation.longitude + ',15z" target="_blank">Öffnen</a></div>' +
                 '</div>';
 
-            let popup = marker.bindPopup(popupContent);
-            if (i === data.length -1) {
-                popup.openPopup();
-            }
+            marker.bindPopup(popupContent);
         }
 
     })
