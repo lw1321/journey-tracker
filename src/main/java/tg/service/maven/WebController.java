@@ -3,6 +3,7 @@ package tg.service.maven;
 import com.azure.core.util.Context;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
+import com.azure.storage.blob.models.BlobHttpHeaders;
 import com.azure.storage.blob.options.BlobParallelUploadOptions;
 import com.azure.storage.blob.sas.BlobSasPermission;
 import com.azure.storage.blob.sas.BlobServiceSasSignatureValues;
@@ -29,6 +30,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -70,9 +72,7 @@ public class WebController {
                 response.add(routeGeojson);
             }
             return ResponseEntity.ok(response);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } catch (ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
     }
@@ -96,9 +96,7 @@ public class WebController {
                 response.add(locationImage);
             }
             return ResponseEntity.ok(response);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } catch (ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
     }
@@ -192,12 +190,12 @@ public class WebController {
             WahooRecord wahooRecord = new WahooRecord();
             // file from wahoo /element app
 
-            String fileUrl = uploadFile(file_name, downloadFile(file_id));
+            String fileUrl = uploadFile(file_name, "application/octet-stream", downloadFile(file_id));
             wahooRecord.blobUrl = fileUrl;
             //parse
             okhttp3.ResponseBody responseBody = parseFit(downloadFile(file_id));
             Gson gson = new Gson();
-            List<double[]> coordinates = new ArrayList<>();
+
             try {
                 FitSequence[] fitSequences = gson.fromJson(responseBody.string(), FitSequence[].class);
                 double factor = (180 / Math.pow(2, 31));
@@ -206,7 +204,6 @@ public class WebController {
                 for (int i = 0; i < fitSequences.length; i++) {
                     double latitude = fitSequences[i].position_lat * factor;
                     double longitude = fitSequences[i].position_long * factor;
-                    coordinates.add(new double[]{latitude, longitude});
                     if (latitude != 0.0) {
                         stringBuilder.append("[" + longitude + "," + latitude + "]");
                         if (i < fitSequences.length - 1) {
@@ -231,7 +228,10 @@ public class WebController {
         else {
             LocationImage locationImage = new LocationImage();
             //thumb
-            String thumbUrl = uploadFile("Thumb_" + telegramWebhook.message.document.file_name, downloadFile(telegramWebhook.message.document.thumb.file_id));
+            String fileName = telegramWebhook.message.document.file_name;
+            var mediaType = URLConnection.guessContentTypeFromName(fileName);
+
+            String thumbUrl = uploadFile("Thumb_" + fileName, mediaType, downloadFile(telegramWebhook.message.document.thumb.file_id));
 
             locationImage.thumbUrl = thumbUrl;
             //image
@@ -258,7 +258,7 @@ public class WebController {
                 throw new RuntimeException(e);
             }
 
-            String imageUrl = uploadFile(file_name, downloadFile(telegramWebhook.message.document.file_id));
+            String imageUrl = uploadFile(file_name, mediaType, downloadFile(telegramWebhook.message.document.file_id));
             locationImage.imageUrl = imageUrl;
 
             saveOnFirebase("location_images", locationImage, String.valueOf(telegramWebhook.message.message_id));
@@ -302,7 +302,6 @@ public class WebController {
     private okhttp3.ResponseBody parseFit(BufferedInputStream bufferedInputStream) {
         OkHttpClient client = new OkHttpClient().newBuilder()
                 .build();
-        MediaType mediaType = MediaType.parse("application/octet-stream");
 
         try {
             okhttp3.RequestBody requestBody = okhttp3.RequestBody.create(bufferedInputStream.readAllBytes());
@@ -335,24 +334,27 @@ public class WebController {
             URL url = new URL("https://api.telegram.org/file/bot" + telegramToken + "/" + file_path);
             return new BufferedInputStream(url.openStream());
 
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
     }
 
-    private String uploadFile(String id, BufferedInputStream bufferedInputStream) {
-        var blobStorageName = id;
-        BlobClient blobClient = blobContainerClient.getBlobClient(blobStorageName);
+    private String uploadFile(String id, String mediaType, BufferedInputStream bufferedInputStream) {
+        BlobClient blobClient = blobContainerClient.getBlobClient(id);
         var uploadOptions = new BlobParallelUploadOptions(bufferedInputStream);
+        uploadOptions.setHeaders(
+            new BlobHttpHeaders()
+                .setCacheControl("public, max-age=21536000")
+                .setContentType(mediaType)
+        );
         var response = blobClient.uploadWithResponse(uploadOptions, Duration.ofSeconds(15),
                 Context.NONE);
         if (response.getStatusCode() != HttpStatus.CREATED.value()) {
             System.out.println("ERROR");
         }
         System.out.println("Uploaded file to blob storage");
+
         var start = OffsetDateTime.now();
         var expiry = start.plusYears(3);
         var permissions = BlobSasPermission.parse("r");
