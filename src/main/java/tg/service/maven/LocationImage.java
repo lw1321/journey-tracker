@@ -1,5 +1,7 @@
 package tg.service.maven;
 
+import javax.annotation.Nullable;
+
 public class LocationImage {
     public String thumbUrl;
 
@@ -8,5 +10,8 @@ public class LocationImage {
     public double latitude;
     public double longitude;
     public String comment;
+
+    @Nullable
+    public String author;
 
 }

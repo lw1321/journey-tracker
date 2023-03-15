@@ -93,6 +93,7 @@ public class WebController {
                 locationImage.latitude = (double) document.get("latitude");
                 locationImage.longitude = (double) document.get("longitude");
                 locationImage.comment = String.valueOf(document.get("comment"));
+                locationImage.author = document.contains("author") ? String.valueOf(document.get("author")) : null;
                 response.add(locationImage);
             }
             return ResponseEntity.ok(response);
@@ -122,7 +123,7 @@ public class WebController {
     }
 
     @PostMapping(path = "/telegram-webhook")
-    public @ResponseBody ResponseEntity receiveTelegramWebhook(@RequestBody TelegramWebhook telegramWebhook) {
+    public @ResponseBody ResponseEntity<TelegramWebhook> receiveTelegramWebhook(@RequestBody TelegramWebhook telegramWebhook) {
         if (telegramWebhook.message == null) {
             return ResponseEntity.notFound().build();
         }
@@ -161,9 +162,7 @@ public class WebController {
                     return ResponseEntity.notFound().build();
                 }
                 //
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            } catch (ExecutionException e) {
+            } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
 
@@ -234,6 +233,7 @@ public class WebController {
             String thumbUrl = uploadFile("Thumb_" + fileName, mediaType, downloadFile(telegramWebhook.message.document.thumb.file_id));
 
             locationImage.thumbUrl = thumbUrl;
+            locationImage.author = telegramWebhook.message.from.username;
             //image
             BufferedInputStream originalImage = downloadFile(telegramWebhook.message.document.file_id);
 
