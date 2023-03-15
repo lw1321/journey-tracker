@@ -94,13 +94,13 @@ fetch('https://tellmemore.dev/v1/location-images')
             }).addTo(map);
             let imageDate = new Date(imageLocation.createdDate * 1000);
             let comment = (imageLocation.comment === "null" || imageLocation.comment === "0") ? "" : imageLocation.comment;
-            let author = (!imageLocation.author || imageLocation.author === "null" || imageLocation.author === "0") ? "" : imageLocation.author;
+            let author = (!imageLocation.author || imageLocation.author === "null" || imageLocation.author === "0") ? "" : " von <i>" + imageLocation.author + "</i>";
             let formattedDate = imageDate.toLocaleDateString('de-DE'); //imageDate.toLocaleTimeString('de-DE'); // Format as string
             let popupContent = '<div>' +
                     '<a href="' + imageLocation.imageUrl + '" target="_blank">' +
                      '<img src="' + imageLocation.thumbUrl + '" width="' + imageWidth + '" height="' + imageHeight + '"></div>' +
                     '</a>' +
-                    '<div>' + formattedDate + " von <i>" + author + "</i></br>  " + comment + "</div>" +
+                    '<div>' + formattedDate + author + "</br>  " + comment + "</div>" +
                     '<div><a href="https://www.google.de/maps/place/' + imageLocation.latitude + '+' + imageLocation.longitude + '/@' + imageLocation.latitude + '+' + imageLocation.longitude + ',15z" target="_blank">Öffnen</a></div>' +
                 '</div>';
 
