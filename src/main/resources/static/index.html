@@ -1,58 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <base target="_top">
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>Tell me more</title>
-  <link rel="shortcut icon" href="#">
+    <title>Tell me more</title>
+    <link rel="shortcut icon" href="#">
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin=""/>
-  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
-  <script src="https://cdn.jsdelivr.net/npm/exifr/dist/lite.umd.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+          integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+            integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/exifr/dist/lite.umd.js"></script>
 
-  <style>
-		html, body {
-			height: 100%;
-			margin: 0;
-		}
-		.leaflet-container {
-			height: 100%;
-			width: 100%;
-			max-width: 100%;
-			max-height: 100%;
-		}
-		.leaflet-popup-content {
-          width: 1500px;
-          height: 100%;
-          overflow-y: scroll;
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
         }
+
+        .leaflet-container {
+            height: 100%;
+            width: 100%;
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .leaflet-popup-content {
+            width: 1500px;
+            height: 100%;
+            overflow-y: scroll;
+        }
+
         .disclaimer {
-          position: absolute;
-          bottom: 0;
-          text-align: center;
-          width: 100%;
-          padding-bottom: 5px;
-          z-index: 999;
+            position: absolute;
+            bottom: 0;
+            text-align: center;
+            width: 100%;
+            padding-bottom: 5px;
+            z-index: 999;
         }
+
         .disclaimer a {
-          color: #333;
-          font-size: 12px;
-          text-decoration: none;
+            color: #333;
+            font-size: 12px;
+            text-decoration: none;
         }
-}
-	</style>
+    </style>
 
 
 </head>
 <body>
 
 
-
 <div id="map" style="height: 100%;"></div>
 <div class="disclaimer">
-  <a href="disclaimer.html">Disclaimer</a>
+    <a href="disclaimer.html">Disclaimer</a>
 </div>
 <script>
 
@@ -61,7 +65,6 @@
 
 <!-- Load the Firebase SDKs before loading this file -->
 <script src="index.js"></script>
-
 
 
 </body>
