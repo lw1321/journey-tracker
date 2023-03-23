@@ -205,6 +205,7 @@ public class WebController {
                     double longitude = fitSequences[i].position_long * factor;
                     if (latitude != 0.0) {
                         stringBuilder.append("[" + longitude + "," + latitude + "]");
+                        stringBuilder.append(",");
                     }
                 }
                 if (fitSequences.length > 0) {
