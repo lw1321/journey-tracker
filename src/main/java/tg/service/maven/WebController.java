@@ -199,16 +199,16 @@ public class WebController {
                 FitSequence[] fitSequences = gson.fromJson(responseBody.string(), FitSequence[].class);
                 double factor = (180 / Math.pow(2, 31));
                 StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.append("[ ");
+                stringBuilder.append("[");
                 for (int i = 0; i < fitSequences.length; i++) {
                     double latitude = fitSequences[i].position_lat * factor;
                     double longitude = fitSequences[i].position_long * factor;
                     if (latitude != 0.0) {
                         stringBuilder.append("[" + longitude + "," + latitude + "]");
-                        if (i < fitSequences.length - 1) {
-                            stringBuilder.append(",");
-                        }
                     }
+                }
+                if (fitSequences.length > 0) {
+                    stringBuilder.deleteCharAt(stringBuilder.length() - 1);
                 }
                 stringBuilder.append("]");
                 wahooRecord.route = stringBuilder.toString();
