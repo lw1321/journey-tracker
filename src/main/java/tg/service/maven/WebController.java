@@ -234,7 +234,7 @@ public class WebController {
             String thumbUrl = uploadFile("Thumb_" + fileName, mediaType, downloadFile(telegramWebhook.message.document.thumb.file_id));
 
             locationImage.thumbUrl = thumbUrl;
-            locationImage.author = telegramWebhook.message.from.username;
+            locationImage.author = telegramWebhook.message.from.username != null ? telegramWebhook.message.from.username : telegramWebhook.message.from.first_name;
             //image
             BufferedInputStream originalImage = downloadFile(telegramWebhook.message.document.file_id);
 

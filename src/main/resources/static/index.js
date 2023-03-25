@@ -59,11 +59,20 @@ fetch('https://tellmemore.dev/v1/wahoo-geojson')
                 "type": "LineString",
                 "coordinates": array
             }];
+
+            let date = new Date(wahooRecord.timeStamp);
+            let daysAgo = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24)); // number of days ago
+
+            let colorPalette = ["#F44336", "#FF9800", "#FFEB3B", "#4CAF50", "#2196F3", "#9C27B0"]; // Material Design color palette
+            let colorIndex = daysAgo % colorPalette.length; // determine the color index based on the number of days
+            let color = colorPalette[colorIndex]; // get the color from the palette
+
             let myStyle = {
-                "color": "#DC143C",
+                "color": color,
                 "weight": 6,
                 "opacity": 0.75
             };
+
             L.geoJSON(route, {
                 style: myStyle
             }).addTo(map);

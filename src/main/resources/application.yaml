@@ -6,6 +6,9 @@ server:
     key-store: classpath:keystore.p12
     key-store-password: ${ssl_keystore_password}
     alias: springBoot
+  compression:
+    enabled: true
+    min-response-size: 1024
 
 spring:
   firebase:
