@@ -1,4 +1,4 @@
-package tg.service.maven;
+package tg.service.maven.config;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;

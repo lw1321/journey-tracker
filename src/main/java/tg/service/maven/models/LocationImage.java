@@ -1,4 +1,4 @@
-package tg.service.maven;
+package tg.service.maven.models;
 
 import javax.annotation.Nullable;
 

@@ -1,4 +1,4 @@
-package tg.service.maven;
+package tg.service.maven.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;

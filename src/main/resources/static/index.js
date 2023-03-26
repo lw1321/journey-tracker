@@ -8,7 +8,7 @@ if (mapBounds) {
 } else {
     map.setView([49.505, 10], 5);
 }
-map.on('moveend', function(e) {
+map.on('moveend', function (e) {
     let bounds = map.getBounds();
     window.localStorage.setItem('mapBounds', bounds.toBBoxString());
 });
@@ -37,7 +37,7 @@ fetch('https://tellmemore.dev/v1/locations')
             L.marker([location.latitude, location.longitude], {
                 icon: bikeIcon,
                 zIndexOffset: 1000,
-            }).addTo(map).on('click', function(e) {
+            }).addTo(map).on('click', function (e) {
                 window.open('https://www.google.de/maps/place/' + location.latitude + '+' + location.longitude + '/@' + location.latitude + '+' + location.longitude + ',15z', '_blank');
             });
         }
@@ -63,7 +63,7 @@ fetch('https://tellmemore.dev/v1/wahoo-geojson')
             let date = new Date(wahooRecord.timeStamp);
             let daysAgo = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24)); // number of days ago
 
-            let colorPalette = ["#F44336", "#FF9800", "#FFEB3B", "#4CAF50", "#2196F3", "#9C27B0"]; // Material Design color palette
+            let colorPalette = ['#f44336', 'black', '#2196f3', '#ffeb3b', '#ff9800', '#9c27b0', '#00bcd4', '#e91e63', '#009688', '#e91e63', '#9c27b0', '#cddc39', '#ff5722']; // Material Design color palette
             let colorIndex = daysAgo % colorPalette.length; // determine the color index based on the number of days
             let color = colorPalette[colorIndex]; // get the color from the palette
 
@@ -106,11 +106,11 @@ fetch('https://tellmemore.dev/v1/location-images')
             let author = (!imageLocation.author || imageLocation.author === "null" || imageLocation.author === "0") ? "" : " von <i>" + imageLocation.author + "</i>";
             let formattedDate = imageDate.toLocaleDateString('de-DE'); //imageDate.toLocaleTimeString('de-DE'); // Format as string
             let popupContent = '<div>' +
-                    '<a href="' + imageLocation.imageUrl + '" target="_blank">' +
-                     '<img src="' + imageLocation.thumbUrl + '" width="' + imageWidth + '" height="' + imageHeight + '"></div>' +
-                    '</a>' +
-                    '<div>' + formattedDate + author + "</br>  " + comment + "</div>" +
-                    '<div><a href="https://www.google.de/maps/place/' + imageLocation.latitude + '+' + imageLocation.longitude + '/@' + imageLocation.latitude + '+' + imageLocation.longitude + ',15z" target="_blank">Öffnen</a></div>' +
+                '<a href="' + imageLocation.imageUrl + '" target="_blank">' +
+                '<img src="' + imageLocation.thumbUrl + '" width="' + imageWidth + '" height="' + imageHeight + '"></div>' +
+                '</a>' +
+                '<div>' + formattedDate + author + "</br>  " + comment + "</div>" +
+                '<div><a href="https://www.google.de/maps/place/' + imageLocation.latitude + '+' + imageLocation.longitude + '/@' + imageLocation.latitude + '+' + imageLocation.longitude + ',15z" target="_blank">Öffnen</a></div>' +
                 '</div>';
 
             marker.bindPopup(popupContent);

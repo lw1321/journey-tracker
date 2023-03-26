@@ -1,4 +1,4 @@
-package tg.service.maven;
+package tg.service.maven.endpoints;
 
 import com.azure.core.util.Context;
 import com.azure.storage.blob.BlobClient;
@@ -12,8 +12,11 @@ import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.exif.ExifDirectoryBase;
 import com.drew.metadata.exif.GpsDirectory;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.firebase.cloud.FirestoreClient;
 import com.google.gson.Gson;
 import com.google.gson.JsonParser;
@@ -25,10 +28,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.*;
+import tg.service.maven.models.*;
+import tg.service.maven.models.telegram.Location;
+import tg.service.maven.models.telegram.TelegramWebhook;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.time.Duration;
@@ -43,11 +48,20 @@ public class WebController {
     @Autowired
     private BlobContainerClient blobContainerClient;
 
+    @Autowired
+    private ObjectMapper objectMapper;
 
     public String telegramBaseUrl = "https://api.telegram.org/bot";
 
     @Value("${spring.telegram.token}")
     private String telegramToken;
+
+    private Cache<String, List<RouteGeojson>> wahooCache = CacheBuilder
+            .newBuilder()
+            .maximumSize(1)
+            .expireAfterWrite(Duration.ofMinutes(10))
+            .build();
+
 
     @GetMapping("/")
     public String index() {
@@ -55,24 +69,41 @@ public class WebController {
     }
 
     @GetMapping("/wahoo-geojson")
-    public ResponseEntity<List<RouteGeojson>> getAllWahooDataAsGeojson() {
-        Firestore db = FirestoreClient.getFirestore();
+    public ResponseEntity<List<RouteGeojson>> getAllWahooDataAsGeojson()  {
 
-// Create a query to retrieve all documents from the "users" collection
-        ApiFuture<QuerySnapshot> future = db.collection("wahoo").get();
-
-// Wait for the query to execute and retrieve the documents
-        var response = new ArrayList<RouteGeojson>();
         try {
-            QuerySnapshot querySnapshot = future.get();
-            for (DocumentSnapshot document : querySnapshot.getDocuments()) {
-                RouteGeojson routeGeojson = new RouteGeojson();
-                routeGeojson.timeStamp = document.getData().get("timeStamp").toString();
-                routeGeojson.route = document.getData().get("route").toString();
-                response.add(routeGeojson);
-            }
-            return ResponseEntity.ok(response);
-        } catch (InterruptedException | ExecutionException e) {
+            var value = wahooCache.get("wahoo", () -> {
+                Firestore db = FirestoreClient.getFirestore();
+
+                // Create a query to retrieve all documents from the "users" collection
+                ApiFuture<QuerySnapshot> future = db.collection("wahoo").get();
+
+                // Wait for the query to execute and retrieve the documents
+                var response = new ArrayList<RouteGeojson>();
+                    QuerySnapshot querySnapshot = future.get();
+                    for (DocumentSnapshot document : querySnapshot.getDocuments()) {
+                        RouteGeojson routeGeojson = new RouteGeojson();
+                        routeGeojson.timeStamp = document.getData().get("timeStamp").toString();
+
+                        var routeJson = document.getData().get("route").toString();
+                        List<List<Double>> routeJsonParsed = objectMapper.readValue(routeJson, List.class);
+
+                        List<List<Double>> extractedRouteJsonParsed = new ArrayList<>();
+                        // only add every third point to keep JSON low
+                        for (int i = 0; i < routeJsonParsed.size(); i += 3) {
+                            if (i < routeJsonParsed.size() - 1) {
+                                extractedRouteJsonParsed.add(routeJsonParsed.get(i));
+                            }
+                        }
+
+                        routeGeojson.route = objectMapper.writeValueAsString(extractedRouteJsonParsed);
+                        response.add(routeGeojson);
+                    }
+                    return response;
+
+            });
+            return ResponseEntity.ok(value);
+        } catch (ExecutionException e) {
             throw new RuntimeException(e);
         }
     }

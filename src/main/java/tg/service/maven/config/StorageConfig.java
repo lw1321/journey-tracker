@@ -1,4 +1,4 @@
-package tg.service.maven;
+package tg.service.maven.config;
 
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobContainerClientBuilder;

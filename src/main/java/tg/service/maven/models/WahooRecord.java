@@ -1,4 +1,4 @@
-package tg.service.maven;
+package tg.service.maven.models;
 
 public class WahooRecord {
     public String route;
