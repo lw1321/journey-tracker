@@ -89,12 +89,14 @@ public class WebController {
                         List<List<Double>> routeJsonParsed = objectMapper.readValue(routeJson, List.class);
 
                         List<List<Double>> extractedRouteJsonParsed = new ArrayList<>();
-                        // only add every third point to keep JSON low
-                        for (int i = 0; i < routeJsonParsed.size(); i += 3) {
+                        // only add every fifth point to keep JSON low
+                        for (int i = 0; i < routeJsonParsed.size(); i += 5) {
                             if (i < routeJsonParsed.size() - 1) {
                                 extractedRouteJsonParsed.add(routeJsonParsed.get(i));
                             }
                         }
+                        // also add last point
+                        extractedRouteJsonParsed.add(routeJsonParsed.get(routeJsonParsed.size() - 1));
 
                         routeGeojson.route = objectMapper.writeValueAsString(extractedRouteJsonParsed);
                         response.add(routeGeojson);
