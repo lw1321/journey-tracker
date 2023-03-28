@@ -18,7 +18,7 @@ let imageHeight = '100%'; // set the height of the image popup
 
 let bikeIcon = L.icon({
     iconUrl: 'bike.png',
-    iconSize: [40, 22], // size of the icon
+    iconSize: [30, 17], // size of the icon
     iconAnchor: [12, 25], // point of the icon which will correspond to marker's location
     popupAnchor: [-3, -76] // point from which the popup should open relative to the iconAnchor
 });
@@ -106,8 +106,8 @@ fetch('https://tellmemore.dev/v1/location-images')
 
             let imageIcon = L.icon({
                 iconUrl: imageLocation.thumbUrl,
-                iconSize: [40, 40], // size of the icon
-                iconAnchor: [25, 25], // point of the icon which will correspond to marker's location
+                iconSize: [30, 30], // size of the icon
+                iconAnchor: [15, 15], // point of the icon which will correspond to marker's location
                 popupAnchor: [-3, -12] // point from which the popup should open relative to the iconAnchor
             });
             let marker = L.marker([imageLocation.latitude, imageLocation.longitude], {
