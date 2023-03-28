@@ -51,7 +51,23 @@ fetch('https://tellmemore.dev/v1/locations')
 fetch('https://tellmemore.dev/v1/wahoo-geojson')
     .then(response => response.json())
     .then(data => {
-        // do something with the data
+
+        let colorPalette = [
+            '#f44336',
+            'black',
+            '#2196f3',
+            '#ffeb3b',
+            '#ff9800',
+            '#9c27b0',
+            '#00bcd4',
+            '#e91e63',
+            '#009688',
+            '#e91e63',
+            '#9c27b0',
+            '#cddc39',
+            '#ff5722'
+        ];
+
         for (let i = 0; i < data.length; i++) {
             let wahooRecord = data[i];
             let array = JSON.parse(wahooRecord.route)
@@ -60,11 +76,7 @@ fetch('https://tellmemore.dev/v1/wahoo-geojson')
                 "coordinates": array
             }];
 
-            let date = new Date(wahooRecord.timeStamp);
-            let daysAgo = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24)); // number of days ago
-
-            let colorPalette = ['#f44336', 'black', '#2196f3', '#ffeb3b', '#ff9800', '#9c27b0', '#00bcd4', '#e91e63', '#009688', '#e91e63', '#9c27b0', '#cddc39', '#ff5722']; // Material Design color palette
-            let colorIndex = daysAgo % colorPalette.length; // determine the color index based on the number of days
+            let colorIndex = i % colorPalette.length; // determine the color index based on the number of days
             let color = colorPalette[colorIndex]; // get the color from the palette
 
             let myStyle = {
