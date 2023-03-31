@@ -343,16 +343,18 @@ public class WebController {
     private ResponseEntity<TelegramWebhook> processPhoto(TelegramWebhook telegramWebhook) {
 
         LocationImage locationImage = new LocationImage();
-        var photo = telegramWebhook.message.photo.get(0);
+        var thumb = telegramWebhook.message.photo.get(2);
         //thumb
-        String fileName = photo.file_unique_id;
-        var mediaType = URLConnection.guessContentTypeFromName(fileName);
+        String fileName = thumb.file_unique_id;
+        var mediaType = "image/jpeg";
 
-        String thumbUrl = uploadFile("Thumb_" + fileName, mediaType, downloadFile(photo.file_id));
+        String thumbUrl = uploadFile("Thumb_" + fileName, mediaType, downloadFile(thumb.file_id));
 
         locationImage.thumbUrl = thumbUrl;
         locationImage.author = telegramWebhook.message.from.username != null ? telegramWebhook.message.from.username : telegramWebhook.message.from.first_name;
         locationImage.createdDate = telegramWebhook.message.date;
+
+        var photo = telegramWebhook.message.photo.get(telegramWebhook.message.photo.size() - 1);
 
         String imageUrl = uploadFile(fileName, mediaType, downloadFile(photo.file_id));
         locationImage.imageUrl = imageUrl;
