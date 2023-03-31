@@ -308,19 +308,23 @@ public class WebController {
                 Metadata metadata = ImageMetadataReader.readMetadata(originalImage);
                 GpsDirectory gpsDirectory = metadata.getFirstDirectoryOfType(GpsDirectory.class);
 
-                double latitude = gpsDirectory.getGeoLocation().getLatitude();
-                double longitude = gpsDirectory.getGeoLocation().getLongitude();
-                long timestampSec;
-                if (gpsDirectory.getGpsDate() != null) {
-                    timestampSec = gpsDirectory.getGpsDate().getTime() / 1000;
+                if (gpsDirectory.getGeoLocation() != null) {
+                    double latitude = gpsDirectory.getGeoLocation().getLatitude();
+                    double longitude = gpsDirectory.getGeoLocation().getLongitude();
+                    long timestampSec;
+                    if (gpsDirectory.getGpsDate() != null) {
+                        timestampSec = gpsDirectory.getGpsDate().getTime() / 1000;
+                    } else {
+                        timestampSec = metadata.getFirstDirectoryOfType(ExifDirectoryBase.class).getDate(306).getTime() / 1000;
+                    }
+                    locationImage.latitude = latitude;
+                    locationImage.longitude = longitude;
+                    locationImage.createdDate = timestampSec;
                 } else {
-                    timestampSec = metadata.getFirstDirectoryOfType(ExifDirectoryBase.class).getDate(306).getTime() / 1000;
+                    locationImage.latitude = 0;
+                    locationImage.longitude = 0;
+                    locationImage.createdDate = telegramWebhook.message.date;
                 }
-
-
-                locationImage.latitude = latitude;
-                locationImage.longitude = longitude;
-                locationImage.createdDate = timestampSec;
             } catch (ImageProcessingException | IOException e) {
                 throw new RuntimeException(e);
             }
