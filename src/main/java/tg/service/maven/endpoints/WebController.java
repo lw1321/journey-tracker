@@ -167,7 +167,7 @@ public class WebController {
             // data message (image or wahoo)
             return processDocument(telegramWebhook);
         }
-        else if (telegramWebhook.message.reply_to_message != null) {
+        else if (telegramWebhook.message.reply_to_message != null && telegramWebhook.message.location == null) {
             // ah its a reply message => comment
             // get the document by message id and store the comment in a new field, then show the comment below the date
             String comment = telegramWebhook.message.text;
@@ -181,11 +181,44 @@ public class WebController {
 
                 // Check if the document exists
                 if (document.exists()) {
-                    // Retrieve the data from the document
-                    Map<String, Object> data = document.getData();
                     // Specify the updates to the document
                     Map<String, Object> updates = new HashMap<>();
                     updates.put("comment", comment);
+                    // Update the document
+                    ApiFuture<WriteResult> update = docRef.update(updates);
+                    System.out.println("Data: " + update.get().toString());
+                    return ResponseEntity.ok().build();
+                } else {
+                    System.out.println("Document not found!");
+                    return ResponseEntity.notFound().build();
+                }
+                //
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+        else if (telegramWebhook.message.reply_to_message != null && telegramWebhook.message.location != null) {
+            // ah its a reply message => comment
+            // get the document by message id and store the comment in a new field, then show the comment below the date
+            int originalMessageId = telegramWebhook.message.reply_to_message.message_id;
+            try {
+                Firestore db = FirestoreClient.getFirestore();
+                DocumentReference docRef = db.collection("location_images").document(String.valueOf(originalMessageId));
+                // Retrieve the document
+                ApiFuture<DocumentSnapshot> future = docRef.get();
+                DocumentSnapshot document = future.get();
+
+                // Check if the document exists
+                if (document.exists()) {
+                    // Specify the updates to the document
+                    Map<String, Object> updates = new HashMap<>();
+
+                    var longitude = telegramWebhook.message.location.longitude;
+                    var latitude = telegramWebhook.message.location.latitude;
+
+                    updates.put("latitude", latitude);
+                    updates.put("longitude", longitude);
                     // Update the document
                     ApiFuture<WriteResult> update = docRef.update(updates);
                     System.out.println("Data: " + update.get().toString());
