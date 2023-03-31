@@ -167,6 +167,9 @@ public class WebController {
             // data message (image or wahoo)
             return processDocument(telegramWebhook);
         }
+        else if (telegramWebhook.message.photo != null) {
+            return processPhoto(telegramWebhook);
+        }
         else if (telegramWebhook.message.reply_to_message != null && telegramWebhook.message.location == null) {
             // ah its a reply message => comment
             // get the document by message id and store the comment in a new field, then show the comment below the date
@@ -336,7 +339,27 @@ public class WebController {
         }
 
         return ResponseEntity.ok(telegramWebhook);
+    }
+    private ResponseEntity<TelegramWebhook> processPhoto(TelegramWebhook telegramWebhook) {
 
+        LocationImage locationImage = new LocationImage();
+        var photo = telegramWebhook.message.photo.get(0);
+        //thumb
+        String fileName = photo.file_unique_id;
+        var mediaType = URLConnection.guessContentTypeFromName(fileName);
+
+        String thumbUrl = uploadFile("Thumb_" + fileName, mediaType, downloadFile(photo.file_id));
+
+        locationImage.thumbUrl = thumbUrl;
+        locationImage.author = telegramWebhook.message.from.username != null ? telegramWebhook.message.from.username : telegramWebhook.message.from.first_name;
+        locationImage.createdDate = telegramWebhook.message.date;
+
+        String imageUrl = uploadFile(fileName, mediaType, downloadFile(photo.file_id));
+        locationImage.imageUrl = imageUrl;
+
+        saveOnFirebase("location_images", locationImage, String.valueOf(telegramWebhook.message.message_id));
+
+        return ResponseEntity.ok(telegramWebhook);
     }
 
 
