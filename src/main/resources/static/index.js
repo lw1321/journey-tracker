@@ -37,9 +37,7 @@ fetch('https://tellmemore.dev/v1/locations')
             L.marker([location.latitude, location.longitude], {
                 icon: bikeIcon,
                 zIndexOffset: 1000,
-            }).addTo(map).on('click', function (e) {
-                window.open('https://www.google.de/maps/place/' + location.latitude + '+' + location.longitude + '/@' + location.latitude + '+' + location.longitude + ',15z', '_blank');
-            });
+            }).addTo(map);
         }
     })
     .catch(error => {
