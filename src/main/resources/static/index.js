@@ -33,11 +33,21 @@ fetch('https://tellmemore.dev/v1/locations')
     .then(data => {
         // do something with the data
         for (let i = 0; i < data.length; i++) {
-            let location = data[i];
-            L.marker([location.latitude, location.longitude], {
-                icon: bikeIcon,
-                zIndexOffset: 1000,
+            let imageLocation = data[i];
+
+          let marker = L.marker([imageLocation.latitude, imageLocation.longitude], {
+                icon: bikeIcon
             }).addTo(map);
+            let imageDate = new Date(imageLocation.createdDate * 1000);
+            let author = (!imageLocation.author || imageLocation.author === "null" || imageLocation.author === "0") ? "" : " von <i>" + imageLocation.author + "</i>";
+            let formattedDate = imageDate.toLocaleDateString('de-DE'); //imageDate.toLocaleTimeString('de-DE'); // Format as string
+            let popupContent =
+                '<div>' + formattedDate + author + "</br>  " + comment + "</div>" +
+                '<div><a href="https://www.google.de/maps/place/' + imageLocation.latitude + '+' + imageLocation.longitude + '/@' + imageLocation.latitude + '+' + imageLocation.longitude + ',15z" target="_blank">Öffnen</a></div>' +
+                '</div>';
+
+            marker.bindPopup(popupContent);
+
         }
     })
     .catch(error => {
