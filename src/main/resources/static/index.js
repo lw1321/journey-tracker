@@ -1,13 +1,7 @@
 const map = L.map('map');
 
 
-L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-    maxZoom: 17,
-    attribution: 'Map data &copy; OpenStreetMap contributors, <a href="https://opentopomap.org/about">OpenTopoMap</a>'
-}).addTo(map);
-
-
-let mapBounds = window.localStorage.getItem('mapBounds');
+mapBounds = window.localStorage.getItem('mapBounds');
 if (mapBounds) {
     [west, south, east, north] = mapBounds.split(',').map(parseFloat)
     let bounds = new L.LatLngBounds(new L.LatLng(south, west), new L.LatLng(north, east))
@@ -30,6 +24,11 @@ let bikeIcon = L.icon({
     popupAnchor: [-3, -76] // point from which the popup should open relative to the iconAnchor
 });
 
+
+tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map);
 
 
 fetch('https://tellmemore.dev/v1/wahoo-geojson')
