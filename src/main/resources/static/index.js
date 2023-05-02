@@ -1,7 +1,7 @@
 const map = L.map('map');
 
 
-mapBounds = window.localStorage.getItem('mapBounds');
+let mapBounds = window.localStorage.getItem('mapBounds');
 if (mapBounds) {
     [west, south, east, north] = mapBounds.split(',').map(parseFloat)
     let bounds = new L.LatLngBounds(new L.LatLng(south, west), new L.LatLng(north, east))
