@@ -95,7 +95,7 @@ fetch('https://tellmemore.dev/v1/location-images')
             });
             let marker = L.marker([imageLocation.latitude, imageLocation.longitude], {
                 icon: imageIcon
-            }).addTo(map);
+            });
             let imageDate = new Date(imageLocation.createdDate * 1000);
             let comment = (imageLocation.comment === "null" || imageLocation.comment === "0") ? "" : imageLocation.comment;
             let author = (!imageLocation.author || imageLocation.author === "null" || imageLocation.author === "0") ? "" : " von <i>" + imageLocation.author + "</i>";
