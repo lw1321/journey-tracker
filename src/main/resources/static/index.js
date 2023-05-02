@@ -81,6 +81,8 @@ fetch('https://tellmemore.dev/v1/wahoo-geojson')
 fetch('https://tellmemore.dev/v1/location-images')
     .then(response => response.json())
     .then(data => {
+     var markers = L.markerClusterGroup().addTo(map);
+
         // do something with the data
         for (let i = 0; i < data.length; i++) {
             let imageLocation = data[i];
@@ -107,6 +109,7 @@ fetch('https://tellmemore.dev/v1/location-images')
                 '</div>';
 
             marker.bindPopup(popupContent);
+            markers.addLayer(marker);
         }
 
     })
