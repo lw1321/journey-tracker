@@ -1,5 +1,12 @@
 const map = L.map('map');
 
+
+L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+    maxZoom: 17,
+    attribution: 'Map data &copy; OpenStreetMap contributors, <a href="https://opentopomap.org/about">OpenTopoMap</a>'
+}).addTo(map);
+
+
 let mapBounds = window.localStorage.getItem('mapBounds');
 if (mapBounds) {
     [west, south, east, north] = mapBounds.split(',').map(parseFloat)
