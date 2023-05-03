@@ -68,6 +68,56 @@ public class WebController {
         return "index.html";
     }
 
+
+
+
+    @GetMapping("/route/distance")
+    public double calculateTotalDistance() throws Exception {
+        
+        
+Firestore db = FirestoreClient.getFirestore();
+
+                // Create a query to retrieve all documents from the "users" collection
+                ApiFuture<QuerySnapshot> future = db.collection("wahoo").get();
+
+                // Wait for the query to execute and retrieve the documents
+                var response = new ArrayList<RouteGeojson>();
+                    QuerySnapshot querySnapshot = future.get();
+        
+        // Iterate through each document and calculate total distance
+        double totalDistance = 0.0;
+        for (QueryDocumentSnapshot document : querySnapshot) {
+
+
+var routeJson = document.getData().get("route").toString();
+List<List<Double>> route = objectMapper.readValue(routeJson, List.class);
+
+            totalDistance += calculateDistance(route);
+        }
+        
+        return totalDistance;
+    }
+    
+  
+private double calculateDistance(List<List<Double>> route) {
+        double distance = 0.0;
+        for (int i = 0; i < route.size() - 1; i++) {
+            List<Double> point1 = route.get(i);
+            List<Double> point2 = route.get(i + 1);
+            double lon1 = Math.toRadians(point1.get(0));
+            double lat1 = Math.toRadians(point1.get(1));
+            double lon2 = Math.toRadians(point2.get(0));
+            double lat2 = Math.toRadians(point2.get(1));
+            double dlon = lon2 - lon1;
+            double dlat = lat2 - lat1;
+            double a = Math.pow(Math.sin(dlat/2), 2) + Math.cos(lat1) * Math.cos(lat2) * Math.pow(Math.sin(dlon/2), 2);
+            double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            distance += 6371 * c; // 6371 is the radius of the Earth in kilometers
+        }
+        return distance;
+}
+
+
     @GetMapping("/wahoo-geojson")
     public ResponseEntity<List<RouteGeojson>> getAllWahooDataAsGeojson()  {
 
