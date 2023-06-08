@@ -51,4 +51,6 @@ jobs:
           script: |
             cd
             sudo kill -9 $(sudo lsof -t -i:443) || true
-            sudo nohup java -jar source/target/maven-0.0.1.jar &> /dev/null &
+            sudo nohup java -jar source/target/maven-0.0.1.jar > app.log 2>&1 &
+
+            
