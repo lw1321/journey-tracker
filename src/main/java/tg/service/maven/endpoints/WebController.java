@@ -69,7 +69,7 @@ public class WebController {
     }
 
 @GetMapping("/route/distance-bike")
-public double calculateTotalDistance() throws Exception {
+public double calculateBikeDistance() throws Exception {
     Firestore db = FirestoreClient.getFirestore();
 
     // Create a query to retrieve all documents from the "wahoo" collection
