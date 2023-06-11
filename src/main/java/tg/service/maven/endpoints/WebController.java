@@ -68,6 +68,32 @@ public class WebController {
         return "index.html";
     }
 
+@GetMapping("/route/distance-bike")
+public double calculateTotalDistance() throws Exception {
+    Firestore db = FirestoreClient.getFirestore();
+
+    // Create a query to retrieve all documents from the "wahoo" collection
+    ApiFuture<QuerySnapshot> future = db.collection("wahoo").get();
+
+    // Wait for the query to execute and retrieve the documents
+    var response = new ArrayList<RouteGeojson>();
+    QuerySnapshot querySnapshot = future.get();
+
+    // Iterate through each document and calculate total distance
+    double totalDistance = 0.0;
+    for (QueryDocumentSnapshot document : querySnapshot) {
+        if (document.contains("blobUrl")) {
+            String blobUrl = document.getString("blobUrl");
+            if (blobUrl != null) {
+                var routeJson = document.getData().get("route").toString();
+                List<List<Double>> route = objectMapper.readValue(routeJson, List.class);
+                totalDistance += calculateDistance(route);
+            }
+        }
+    }
+
+    return totalDistance;
+}
 
 
 
