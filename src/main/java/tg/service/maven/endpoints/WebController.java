@@ -166,8 +166,8 @@ private double calculateDistance(List<List<Double>> route) {
                         List<List<Double>> routeJsonParsed = objectMapper.readValue(routeJson, List.class);
 
                         List<List<Double>> extractedRouteJsonParsed = new ArrayList<>();
-                        // only add every fifth point to keep JSON low
-                        for (int i = 0; i < routeJsonParsed.size(); i += 5) {
+                        // only add every 30th point to keep JSON low
+                        for (int i = 0; i < routeJsonParsed.size(); i += 30) {
                             if (i < routeJsonParsed.size() - 1) {
                                 extractedRouteJsonParsed.add(routeJsonParsed.get(i));
                             }
