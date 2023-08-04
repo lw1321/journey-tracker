@@ -170,7 +170,7 @@ if(routeJsonParsed.size()<100){
 }
                         List<List<Double>> extractedRouteJsonParsed = new ArrayList<>();
                         // only add every 30th point to keep JSON low
-                        for (int i = 0; i < routeJsonParsed.size(); i += 30) {
+                        for (int i = 0; i < routeJsonParsed.size(); i += steps) {
                             if (i < routeJsonParsed.size() - 1) {
                                 extractedRouteJsonParsed.add(routeJsonParsed.get(i));
                             }
