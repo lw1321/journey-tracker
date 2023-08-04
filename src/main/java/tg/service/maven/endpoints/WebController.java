@@ -164,7 +164,10 @@ private double calculateDistance(List<List<Double>> route) {
 
                         var routeJson = document.getData().get("route").toString();
                         List<List<Double>> routeJsonParsed = objectMapper.readValue(routeJson, List.class);
-
+int steps = 30;
+if(routeJsonParsed.size()<100){
+   steps=1;
+}
                         List<List<Double>> extractedRouteJsonParsed = new ArrayList<>();
                         // only add every 30th point to keep JSON low
                         for (int i = 0; i < routeJsonParsed.size(); i += 30) {
