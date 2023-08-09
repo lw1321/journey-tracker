@@ -100,7 +100,7 @@ System.out.println("hui");
                     String date = convertTimestampToDate(timestamp);
 
                     // Add the calculated distance to the existing distance for the date
-                    dateDistanceMap.put(date, dateDistanceMap.getOrDefault(date, 0.0) + distance);
+                    dateDistanceMap.put(timestamp, dateDistanceMap.getOrDefault(date, 0.0) + distance);
                 }
             }
         }
