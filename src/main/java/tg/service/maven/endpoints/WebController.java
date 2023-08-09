@@ -1,4 +1,14 @@
 package tg.service.maven.endpoints;
+
+
+
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartUtilities;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.DefaultCategoryDataset;
+
+
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpHeaders;
 import org.springframework.core.io.ClassPathResource;
@@ -75,6 +85,40 @@ public class WebController {
     }
 
     
+@GetMapping("/stats")
+public ResponseEntity<byte[]> generateStatsChart() throws IOException {
+    // Fetch data from the /route/map endpoint
+    ResponseEntity<Map<String, Double>> mapResponse = getMapOfDateAndDistancePerDay();
+    Map<String, Double> data = mapResponse.getBody();
+
+    // Create a dataset for the chart
+    DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+    data.forEach((date, distance) -> dataset.addValue(distance, "Distance", date));
+
+    // Create the chart
+    JFreeChart chart = ChartFactory.createBarChart(
+            "Distance Per Day",
+            "Date",
+            "Distance (km)",
+            dataset,
+            PlotOrientation.VERTICAL,
+            true,
+            true,
+            false
+    );
+
+    // Convert the chart to a byte array
+    byte[] chartBytes;
+    try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+        ChartUtilities.writeChartAsJPEG(byteArrayOutputStream, chart, 800, 600);
+        chartBytes = byteArrayOutputStream.toByteArray();
+    }
+
+    // Set headers and return the chart image as a ResponseEntity
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.IMAGE_JPEG);
+    return new ResponseEntity<>(chartBytes, headers, HttpStatus.OK);
+}
 
     @GetMapping("/route/map")
     public ResponseEntity<Map<String, Double>> getMapOfDateAndDistancePerDay() throws Exception {
