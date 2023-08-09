@@ -120,7 +120,7 @@ private Map<String, Double> sortMapByDate(Map<String, Double> unsortedMap) {
     }
     
 
-private Date convertTimestampToDate(String timestamp) {
+private String convertTimestampToDate(String timestamp) {
     SimpleDateFormat inputDateFormat = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss");
 
     try {
