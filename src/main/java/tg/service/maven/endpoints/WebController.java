@@ -105,9 +105,16 @@ System.out.println("hui");
             }
         }
 
-        return ResponseEntity.ok(dateDistanceMap);
+Map<String, Double> sortedMap = sortMapByDate(dateDistanceMap);
+        return ResponseEntity.ok(sortedMap);
     }
-
+private Map<String, Double> sortMapByDate(Map<String, Double> unsortedMap) {
+        return unsortedMap.entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByKey())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                        (e1, e2) -> e1, LinkedHashMap::new));
+    }
     // Helper method to convert timestamp to date (you need to implement this)
     private String convertTimestampToDate(String timestamp) {
         // Implement the conversion logic here
