@@ -81,7 +81,7 @@ public class WebController {
             byte[] data = resource.getInputStream().readAllBytes();
             
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.TEXT_HTML_VALUE);
+            headers.setContentType(MediaType.TEXT_HTML);
             
             return new ResponseEntity<>(data, headers, HttpStatus.OK);
         } catch (IOException e) {
