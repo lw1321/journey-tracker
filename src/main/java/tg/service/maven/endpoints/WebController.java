@@ -124,7 +124,9 @@ private Date convertTimestampToDate(String timestamp) {
     SimpleDateFormat inputDateFormat = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss");
 
     try {
-        return inputDateFormat.parse(timestamp);
+        Date date = inputDateFormat.parse(timestamp);
+SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
+    return dateFormat.format(date);
     } catch (ParseException e) {
         throw new RuntimeException("Error parsing date: " + e.getMessage());
     }
