@@ -71,6 +71,10 @@ public class WebController {
         return "index.html";
     }
 
+    @GetMapping("/chart") 
+     public String index() { 
+         return "chart.html"; 
+     }
 
 
 
