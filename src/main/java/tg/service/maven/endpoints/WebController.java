@@ -71,11 +71,20 @@ public class WebController {
         return "index.html";
     }
 
-    @GetMapping("chart/") 
-     public String chart() { 
-         return "chart.html"; 
-     }
-
+    @GetMapping("/chart")
+    public ResponseEntity<byte[]> chart() {
+        try {
+            ClassPathResource resource = new ClassPathResource("static/chart.html");
+            byte[] data = resource.getInputStream().readAllBytes();
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.TEXT_HTML);
+            
+            return new ResponseEntity<>(data, headers, HttpStatus.OK);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
 
 
     @GetMapping("/route/map")
