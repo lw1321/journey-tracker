@@ -100,8 +100,12 @@ System.out.println("hui");
                     String timestamp = document.getData().get("timeStamp").toString();
                     String date = convertTimestampToDate(timestamp);
 
+SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
+                String formattedDate = dateFormat.format(date);
+
+
                     // Add the calculated distance to the existing distance for the date
-                    dateDistanceMap.put(date, dateDistanceMap.getOrDefault(date, 0.0) + distance);
+                    dateDistanceMap.put(formattedDate, dateDistanceMap.getOrDefault(formattedDate, 0.0) + distance);
                 }
             }
         }
