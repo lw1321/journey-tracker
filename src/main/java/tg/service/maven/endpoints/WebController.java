@@ -1,6 +1,7 @@
 package tg.service.maven.endpoints;
 
 import java.util.stream.Collectors;
+import java.text.SimpleDateFormat;
 import com.azure.core.util.Context;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
@@ -100,12 +101,9 @@ System.out.println("hui");
                     String timestamp = document.getData().get("timeStamp").toString();
                     String date = convertTimestampToDate(timestamp);
 
-SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
-                String formattedDate = dateFormat.format(date);
-
 
                     // Add the calculated distance to the existing distance for the date
-                    dateDistanceMap.put(formattedDate, dateDistanceMap.getOrDefault(formattedDate, 0.0) + distance);
+                    dateDistanceMap.put(date.toISOString().substring(0, 10), dateDistanceMap.getOrDefault(date, 0.0) + distance);
                 }
             }
         }
