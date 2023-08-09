@@ -101,7 +101,7 @@ System.out.println("hui");
                     String date = convertTimestampToDate(timestamp);
 
                     // Add the calculated distance to the existing distance for the date
-                    dateDistanceMap.put(timestamp, dateDistanceMap.getOrDefault(date, 0.0) + distance);
+                    dateDistanceMap.put(date, dateDistanceMap.getOrDefault(date, 0.0) + distance);
                 }
             }
         }
@@ -116,12 +116,18 @@ private Map<String, Double> sortMapByDate(Map<String, Double> unsortedMap) {
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (e1, e2) -> e1, LinkedHashMap::new));
     }
-    // Helper method to convert timestamp to date (you need to implement this)
-    private String convertTimestampToDate(String timestamp) {
-        // Implement the conversion logic here
-        // Example: return formatted date string
-        return "2023-08-09";
+    
+
+private Date convertTimestampToDate(String timestamp) {
+    SimpleDateFormat inputDateFormat = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss");
+
+    try {
+        return inputDateFormat.parse(timestamp);
+    } catch (ParseException e) {
+        throw new RuntimeException("Error parsing date: " + e.getMessage());
     }
+}
+
 @GetMapping("/route/distance-bike")
 public double calculateBikeDistance() throws Exception {
     Firestore db = FirestoreClient.getFirestore();
