@@ -74,6 +74,7 @@ public class WebController {
 
     @GetMapping("/route/map")
     public ResponseEntity<Map<String, Double>> getMapOfDateAndDistancePerDay() throws Exception {
+System.out.println("hui");
         Firestore db = FirestoreClient.getFirestore();
 
         // Create a query to retrieve all documents from the "wahoo" collection
