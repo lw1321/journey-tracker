@@ -110,7 +110,7 @@ public class WebController {
             return document.getData();
         } else {
             // Handle the case where the document does not exist
-            throw new DocumentNotFoundException("Document with ID " + documentId + " not found.");
+            throw new Exception("Document with ID " + documentId + " not found.");
         }
     }
 
