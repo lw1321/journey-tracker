@@ -78,6 +78,42 @@ public class WebController {
         return "index.html";
     }
 
+    @GetMapping("/wahoo-raw/meta")
+    public List<String> wahooMetadata() throws InterruptedException, ExecutionException {
+        Firestore db = FirestoreClient.getFirestore();
+
+        // Create a query to retrieve all documents from the "wahoo-raw" collection
+        ApiFuture<QuerySnapshot> future = db.collection("wahoo-raw").get();
+
+        // Wait for the query to execute and retrieve the documents
+        QuerySnapshot querySnapshot = future.get();
+
+        // Create a list to store document names
+        List<String> documentNames = new ArrayList<>();
+
+        // Iterate through the query results and get the document names
+        for (DocumentSnapshot document : querySnapshot.getDocuments()) {
+            documentNames.add(document.getId());
+        }
+
+        return documentNames;
+    }
+    @GetMapping("/wahoo-raw/{documentId}")
+    public Map<String, Object> getDocumentData(@PathVariable String documentId)
+            throws InterruptedException, ExecutionException {
+        Firestore db = FirestoreClient.getFirestore();
+        DocumentReference docRef = db.collection("wahoo-raw").document(documentId);
+        ApiFuture<DocumentSnapshot> future = docRef.get();
+        DocumentSnapshot document = future.get();
+
+        if (document.exists()) {
+            return document.getData();
+        } else {
+            // Handle the case where the document does not exist
+            throw new DocumentNotFoundException("Document with ID " + documentId + " not found.");
+        }
+    }
+
     
 
     @GetMapping("/route/map")
