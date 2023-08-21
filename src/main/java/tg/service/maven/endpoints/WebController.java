@@ -83,7 +83,7 @@ public class WebController {
         Firestore db = FirestoreClient.getFirestore();
 
         // Create a query to retrieve all documents from the "wahoo-raw" collection
-        ApiFuture<QuerySnapshot> future = db.collection("wahoo-raw").get();
+        ApiFuture<QuerySnapshot> future = db.collection("wahoo_raw").get();
 
         // Wait for the query to execute and retrieve the documents
         QuerySnapshot querySnapshot = future.get();
