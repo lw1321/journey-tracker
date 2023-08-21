@@ -99,7 +99,7 @@ public class WebController {
         return documentNames;
     }
     @GetMapping("/wahoo-raw/{documentId}")
-    public Map<String, Object> getDocumentData(@PathVariable String documentId) 
+    public Map<String, Object> getDocumentData(@PathVariable String documentId) throws
             Exception {
         Firestore db = FirestoreClient.getFirestore();
         DocumentReference docRef = db.collection("wahoo-raw").document(documentId);
