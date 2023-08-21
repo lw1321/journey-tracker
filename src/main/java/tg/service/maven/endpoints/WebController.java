@@ -101,7 +101,7 @@ public class WebController {
     @GetMapping("/wahoo-raw/{documentId}")
     public Map<String, Object> getDocumentData(@PathVariable String documentId) throws Exception {
         Firestore db = FirestoreClient.getFirestore();
-        DocumentReference docRef = db.collection("wahoo-raw").document(documentId);
+        DocumentReference docRef = db.collection("wahoo_raw").document(documentId);
         ApiFuture<DocumentSnapshot> future = docRef.get();
         DocumentSnapshot document = future.get();
 
