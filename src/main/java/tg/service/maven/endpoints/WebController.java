@@ -92,15 +92,14 @@ public class WebController {
         List<String> documentNames = new ArrayList<>();
 
         // Iterate through the query results and get the document names
-        for (DocumentSnapshot document : querySnapshot.getDocuments()) {
+        for (QueryDocumentSnapshot document : querySnapshot) {
             documentNames.add(document.getId());
         }
 
         return documentNames;
     }
     @GetMapping("/wahoo-raw/{documentId}")
-    public Map<String, Object> getDocumentData(@PathVariable String documentId) throws
-            Exception {
+    public Map<String, Object> getDocumentData(@PathVariable String documentId) throws Exception {
         Firestore db = FirestoreClient.getFirestore();
         DocumentReference docRef = db.collection("wahoo-raw").document(documentId);
         ApiFuture<DocumentSnapshot> future = docRef.get();
